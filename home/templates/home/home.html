@@ -6,15 +6,15 @@
 </head>
 <body>
     <h2>Organizations You Admin</h2>
-    {% if organizations == None %}
-        <p>You must be logged in to view your organizations.</p>
-    {% elif organizations %}
+    {% if Organizations == None %}
+        <p>You must be logged in to view your Organizations.</p>
+    {% elif Organizations %}
         <ul>
-        {% for org in organizations %}
+        {% for org in Organizations %}
             <li>{{ org.name }}</li>
         {% endfor %}
         </ul>
     {% else %}
-        <p>You are not an admin for any organizations.</p>
+        <p>You are not an admin for any Organizations.</p>
     {% endif %}
 </body>
