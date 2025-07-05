@@ -2,19 +2,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Organizations</title>
+    <title>My Events</title>
 </head>
 <body>
-    <h2>Organizations You Admin</h2>
-    {% if Organizations == None %}
-        <p>You must be logged in to view your Organizations.</p>
-    {% elif Organizations %}
-        <ul>
-        {% for org in Organizations %}
-            <li>{{ org.name }}</li>
-        {% endfor %}
-        </ul>
+    <h2>Events Related to Your Organizations</h2>
+    {% if events == None %}
+        <p>You must be logged in to view your events.</p>
+    {% elif events %}
+        <table border="1" cellpadding="6">
+            <tr>
+                <th>Date</th>
+                <th>Time of Day</th>
+                <th>Country</th>
+                <th>Location</th>
+                <th>Organizers</th>
+            </tr>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.date }}</td>
+                <td>{{ event.time_of_day }}</td>
+                <td>{{ event.country.name }}</td>
+                <td>{% if event.location %}{{ event.location.name }}{% else %}-{% endif %}</td>
+                <td>
+                    {% for org in event.organizers.all %}
+                        {{ org.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
     {% else %}
-        <p>You are not an admin for any Organizations.</p>
+        <p>You have no related events.</p>
     {% endif %}
 </body>
+</html>
