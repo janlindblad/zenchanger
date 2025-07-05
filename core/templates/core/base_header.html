@@ -1,0 +1,56 @@
+<style>
+    body {
+        background-color: #e6ffe6; /* very light green */
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #b3ffb3;
+        padding: 16px 32px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .header-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #2d662d;
+    }
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .header-actions form, .header-actions a {
+        margin: 0;
+        display: inline;
+    }
+    .header-actions button, .header-actions a {
+        background: #2d662d;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .header-actions button:hover, .header-actions a:hover {
+        background: #228b22;
+    }
+</style>
+<div class="header-row">
+    <div class="header-title">GameChanger Dashboard</div>
+    <div class="header-actions">
+        {% if user.is_authenticated %}
+            <span>{{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </div>
+</div>

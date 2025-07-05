@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup DB</title>
+    {% include "core/base_header.html" %}
+</head>
+<body>
+    <h2>Database Setup</h2>
+    {% if success %}
+        <div style="color: green;">{{ success }}</div>
+    {% elif error %}
+        <div style="color: red;">{{ error }}</div>
+    {% endif %}
+</body>
+</html>

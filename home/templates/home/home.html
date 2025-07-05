@@ -1,0 +1,20 @@
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Organizations</title>
+</head>
+<body>
+    <h2>Organizations You Admin</h2>
+    {% if organizations == None %}
+        <p>You must be logged in to view your organizations.</p>
+    {% elif organizations %}
+        <ul>
+        {% for org in organizations %}
+            <li>{{ org.name }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>You are not an admin for any organizations.</p>
+    {% endif %}
+</body>
