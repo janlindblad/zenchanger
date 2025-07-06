@@ -31,7 +31,7 @@
             <td>{{ item.isrc.cron_expression }}</td>
             <td>{{ item.isrc.enabled }}</td>
             <td>
-                {{ item.isrc.last_run|default:"-" }}
+                {{ item.isrc.last_run|date:"Y-m-d H:i:s"|default:"-" }}
                 <br/>
                 <form method="post" action="{% url 'source_view' %}" 
                     style="display:inline;"
@@ -42,7 +42,7 @@
                 </form>
             </td>
             <td>
-                {{ item.isrc.next_run|default:"-" }}
+                {{ item.isrc.next_run|date:"Y-m-d H:i:s"|default:"-" }}
                 <br/>
                 <form method="post" action="{% url 'source_view' %}"
                     style="display:inline;"
@@ -55,20 +55,14 @@
             </td>
             <td class="folded">
                 {% if item.irec %}
-                <table class="records-table">
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Result</th>
-                    </tr>
+                    <ul>
                     {% for record in item.irec %}
-                    <tr>
-                        <td>{{ record.timestamp }}</td>
-                        <td><pre style="white-space: pre-wrap;">{{ record.result|safe }}</pre></td>
-                    </tr>
+                        <li>{{ record.timestamp|date:"Y-m-d H:i:s" }}:
+                        {{ record.result|safe }}</li>
                     {% endfor %}
-                </table>
+                    </ul>
                 {% else %}
-                    No records.
+                    <p>No records.</p>
                 {% endif %}
             </td>
         </tr>

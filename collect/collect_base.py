@@ -1,3 +1,5 @@
+import datetime
+
 class Collector:
     _registry = {}
 
@@ -10,7 +12,7 @@ class Collector:
         return cls._registry.get(name)
 
     @staticmethod
-    def dispatch(source, ops=["collect", "clear", "load"]):
+    def dispatch(source, ops=["collect", "clear", "store"]):
         """
         Dispatches the collection process for the given source.
         """
@@ -23,11 +25,13 @@ class Collector:
             if not collector.collect_data():
                 raise ValueError(f"{source.id} collection failed")
         if "clear" in ops:
-            if not collector.clear_source_data():
+            if not collector.clear_data():
                 raise ValueError(f"{source.id} clearing failed")
-        if "load" in ops:
-            if not collector.load_data():
-                raise ValueError(f"{source.id} loading failed")
+        if "store" in ops:
+            if not collector.store_data():
+                raise ValueError(f"{source.id} storing failed")
+            source.last_run = datetime.datetime.now(tz=datetime.timezone.utc)
+            source.save()
         return True
     
     def __init__(self, source):
@@ -36,8 +40,8 @@ class Collector:
     def collect_data(self):
         return True
 
-    def clear_source_data(self):
+    def clear_data(self):
         return True
 
-    def load_data(self, response_list):
+    def store_data(self, response_list):
         return True

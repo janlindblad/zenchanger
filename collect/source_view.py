@@ -14,10 +14,9 @@ def source_view(request):
         return redirect("source_view")
 
     sources = Source.objects.all()
-    # For each source, get the last 3 records
     source_data = []
     for source in sources:
-        records = source.records.order_by('-timestamp')[:3]
+        records = source.records.order_by('-timestamp')[:6]
         source_data.append({
             "isrc": source,
             "irec": records,

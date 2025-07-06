@@ -1,8 +1,8 @@
+import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from cron_converter import Cron
-from datetime import datetime, timedelta
 from .models import Source, Record
 from .collect_base import Collector
 
@@ -19,16 +19,16 @@ def run_collect_plugin(request, source_id):
         Record.objects.create(
             source=source,
             result=result,
-            timestamp=datetime.now()
+            timestamp=datetime.datetime.now(tz=datetime.timezone.utc)
         )
-        source.last_run = datetime.now()
+        source.last_run = datetime.datetime.now(tz=datetime.timezone.utc)
         source.save()
         return JsonResponse({"status": "success", "result": result})
     except Exception as e:
         Record.objects.create(
             source=source,
             result={"error": str(e)},
-            timestamp=datetime.now()
+            timestamp=datetime.datetime.now(tz=datetime.timezone.utc)
         )
         return JsonResponse({"status": "error", "error": str(e)}, status=500)
     
@@ -39,7 +39,10 @@ def run_collect_all(request):
                 continue
             if source.plugin == "disabled":
                 continue
-            next_run = Cron(source.cron_expression, start_date=datetime.now()).next()
+            next_run = Cron(
+                            source.cron_expression, 
+                            start_date=datetime.datetime.now(tz=datetime.timezone.utc)
+                        ).next()
             if source.next_run != next_run:
                 source.next_run = next_run
                 source.save()

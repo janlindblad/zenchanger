@@ -20,20 +20,20 @@ class Collect_fffse(Collector):
         response_count = len(response_list)
         print(f"fffse collected {response_count} responses")
         self.responses = response_list
-        self.report(f"Read {len(self.responses)} items")
+        self.report(f"Collected {len(self.responses)} items")
         return True
 
-    def clear_source_data(self):
-        print(f"fffse clear_source_data() for source {self.source.id}")
+    def clear_data(self):
+        print(f"fffse clear_data() for source {self.source.id}")
         cleared_count = Event.objects.filter(ext_data_src=self.source.id).count()
         Event.objects.filter(ext_data_src=self.source.id).delete()
         print(f"fffse cleared {cleared_count} events from {self.source.id}")
         self.report(f"Cleared {cleared_count} old events")
         return True
 
-    def load_data(self):
-        print(f"fffse load_data() for source {self.source.id} with {len(self.responses)} responses")
-        loaded_count = 0
+    def store_data(self):
+        print(f"fffse store_data() for source {self.source.id} with {len(self.responses)} responses")
+        stored_count = 0
         sweden = Country.objects.get(code='SE')
         fff_sweden = Organization.objects.get(name='Fridays For Future Sweden')
         for item in self.responses:
@@ -47,13 +47,12 @@ class Collect_fffse(Collector):
                 )
                 event.save()
                 event.organizers.add(fff_sweden)
-                loaded_count += 1
-                print(f"     Stored event: {event.id} at {event.date} in {event.location} by {event.organizers}")
+                stored_count += 1
+                print(f"     Stored event: {event.id} at {event.date} in {event.location}")
             except Exception as e:
                 print(f"     Error storing event: {e}")
                 continue
-        print(f"     Response id {item['RTIME']} submitted at {datetime.datetime.utcfromtimestamp(item['RTIME'])}")
-        self.report(f"Loaded {loaded_count} new events")
+        self.report(f"Stored {stored_count} new events")
         return True
     
     def report(self, result):
