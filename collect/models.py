@@ -6,20 +6,14 @@ class Source(models.Model):
     url = models.URLField()
     settings = models.JSONField()
     plugin = models.CharField(max_length=255, default="disabled")
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return self.id
-
-class Schedule(models.Model):
-    source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name='schedules')
-    cron_expression = models.CharField(max_length=255)
+    cron_expression = models.CharField(max_length=255, null=True, blank=True)
     enabled = models.BooleanField(default=True)
-    last_run = models.DateTimeField(null=True, blank=True)
+    last_run = models.DateTimeField(null=True, blank=True, editable=False)
+    next_run = models.DateTimeField(null=True, blank=True, editable=False)
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"Schedule for {self.source.id} - {'Enabled' if self.enabled else 'Disabled'}"
+        return f"Source {self.id} - {'Enabled' if self.enabled else 'Disabled'}"
 
 class Record(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name='records')
