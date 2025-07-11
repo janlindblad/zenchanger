@@ -22,3 +22,15 @@ class Record(models.Model):
 
     def __str__(self):
         return f"Record from {self.source.id} at {self.timestamp}"
+    
+class LocationImportMapping(models.Model):
+    source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name='location_mappings')
+    imported_name = models.CharField(max_length=255)
+    location = models.ForeignKey('core.Location', null=True, blank=True, on_delete=models.CASCADE, related_name='location_mappings')
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('source', 'imported_name')
+
+    def __str__(self):
+        return f"Mapping for {self.source}:{self.imported_name} to {self.location.name if self.location else 'None'}"

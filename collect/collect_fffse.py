@@ -2,7 +2,7 @@
 import datetime, json, requests
 from core.models import Event, Country, Organization, Location
 from .collect_base import Collector
-from .models import Record
+from .models import Record, LocationImportMapping
 
 class Collect_fffse(Collector):
     def __init__(self, source):
@@ -41,24 +41,31 @@ class Collect_fffse(Collector):
             print(item)
             try:
                 ecity = item.get('ECITY', '').strip()
-                loc = Location.objects.filter(
-                    name__iexact=ecity,
-                    in_country=sweden
+                loc = None
+                map_loc = LocationImportMapping.objects.filter(
+                    source=self.source,
+                    imported_name__iexact=ecity,
                 ).first()
-                if not loc:
-                    print(f"     Creating new location for {ecity} in {sweden.name}")
-                    loc = Location.objects.create(
-                        name=ecity,
-                        in_country=sweden,
-                        lat=item.get('ELAT', 0.0),
-                        lon=item.get('ELON', 0.0)
-                    )
-                    loc.save()
+                if map_loc:
+                    loc = map_loc.location
+                else:
+                    loc = Location.objects.filter(
+                        name__iexact=ecity,
+                        in_country=sweden
+                    ).first()
+                    if not loc:
+                        print(f"     Creating new location map for {ecity} in {sweden.name}")
+                        map_loc = LocationImportMapping.objects.create(
+                            source=self.source,
+                            imported_name=ecity,
+                        )
+                        map_loc.save()
 
                 event = Event.objects.create(
                     id = f'{self.source.id}:{item["RTIME"]}',
                     ext_data_src = self.source.id,
                     date = self.source.settings.get('date', '2020-09-25'),
+                    location = loc,
                     country = sweden,
                 )
                 event.save()
