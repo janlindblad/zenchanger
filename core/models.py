@@ -25,12 +25,16 @@ class Country(models.Model):
         return f"{self.name.title()}"
 
 class Location(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    display_name = models.CharField(max_length=255, blank=True)
     in_country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='locations')
     in_location = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='sublocations')
     lat = models.FloatField()
     lon = models.FloatField()
     history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('name', 'in_location')
 
     def save(self, *args, **kwargs):
         self.name = self.name.lower()

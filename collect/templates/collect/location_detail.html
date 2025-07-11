@@ -1,0 +1,166 @@
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ location.name|title }} - Location Detail</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        .location-info { background: #f9f9f9; padding: 15px; margin: 20px 0; }
+        .google-result { background: #e6f3ff; padding: 15px; margin: 20px 0; border-left: 4px solid #0066cc; }
+        .error { background: #ffe6e6; border-left: 4px solid #cc0000; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a, .lookup-btn { 
+            background: #2d662d; 
+            color: #fff; 
+            padding: 8px 16px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            margin-right: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-links a:hover, .lookup-btn:hover { background: #228b22; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="{% url 'location_view' %}">← Back to Locations</a>
+    </div>
+    
+    <h2>{{ location.name|title }}</h2>
+    
+    <div class="location-info">
+        <p><strong>Country:</strong> {{ location.in_country.name|title }}</p>
+        <p><strong>Coordinates:</strong> {{ location.lat }}, {{ location.lon }}</p>
+        {% if chain %}
+        <p><strong>Location Chain:</strong> 
+            {% for parent in chain %}
+                <a href="{% url 'location_detail' parent.id %}">{{ parent.name|title }}</a>
+                {% if not forloop.last %} → {% endif %}
+            {% endfor %}
+        </p>
+        {% endif %}
+        
+        <form method="post" style="margin-top: 15px;">
+            {% csrf_token %}
+            <button type="submit" name="lookup" class="lookup-btn">🔍 Google Maps Lookup</button>
+        </form>
+    </div>
+    
+    {% if google_result %}
+        {% if google_result.status == 'success' %}
+        <div class="google-result">
+            <h3>Google Maps Results ({{ google_result.total_results }} found)</h3>
+            
+            {% if create_message %}
+            <div class="create-message" style="background: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                {{ create_message }}
+            </div>
+            {% endif %}
+            
+            {% for result in google_result.results %}
+            <div class="google-result-item" style="border: 2px solid #0066cc; margin: 10px 0; padding: 15px; border-radius: 5px;">
+                <h4>Result {{ forloop.counter }}</h4>
+                <p><strong>Address:</strong> {{ result.formatted_address }}</p>
+                <p><strong>Google Coordinates:</strong> {{ result.lat }}, {{ result.lon }}</p>
+                {% if result.location_chain %}
+                <p><strong>Google Location Chain:</strong> {{ result.location_chain|join:" → " }}</p>
+                {% endif %}
+                {% if result.types %}
+                <p><strong>Place Types:</strong> {{ result.types|join:", " }}</p>
+                {% endif %}
+                <p><strong>Place ID:</strong> <code>{{ result.place_id }}</code></p>
+                <p><strong>Country Code:</strong> {{ result.country_code }}</p>
+                
+                {% if result.missing_locations %}
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                    <p><strong>Missing Locations:</strong> {{ result.missing_locations|join:", " }}</p>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="create_locations" value="1">
+                        <input type="hidden" name="result_index" value="{{ forloop.counter0 }}">
+                        <input type="hidden" name="country_code" value="{{ result.country_code }}">
+                        <input type="hidden" name="lat" value="{{ result.lat }}">
+                        <input type="hidden" name="lon" value="{{ result.lon }}">
+                        {% for loc in result.location_chain %}
+                        <input type="hidden" name="location_chain" value="{{ loc }}">
+                        {% endfor %}
+                        <button type="submit" class="create-btn" style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            Create {{ result.missing_locations|join:", " }}
+                        </button>
+                    </form>
+                </div>
+                {% elif result.coordinate_updates %}
+                    {% for update in result.coordinate_updates %}
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                        <p><strong>Coordinate Difference Detected for "{{ update.location.name|title }}"</strong></p>
+                        <p>Current: ({{ update.current_lat }}, {{ update.current_lon }})</p>
+                        <p>Google: ({{ update.google_lat }}, {{ update.google_lon }})</p>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_coordinates" value="1">
+                            <input type="hidden" name="location_id" value="{{ update.location.id }}">
+                            <input type="hidden" name="new_lat" value="{{ update.google_lat }}">
+                            <input type="hidden" name="new_lon" value="{{ update.google_lon }}">
+                            <button type="submit" class="create-btn" style="background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                                Update Coordinates
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p style="color: #28a745;"><strong>All locations already exist with accurate coordinates</strong></p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="google-result error">
+            <h3>Google Maps Lookup Failed</h3>
+            <p>{{ google_result.message }}</p>
+        </div>
+        {% endif %}
+    {% endif %}
+    
+    {% if sublocations %}
+    <h3>Sub-locations</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Coordinates</th>
+        </tr>
+        {% for subloc in sublocations %}
+        <tr>
+            <td><a href="{% url 'location_detail' subloc.id %}">{{ subloc.name|title }}</a></td>
+            <td>{{ subloc.lat }}, {{ subloc.lon }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    
+    {% if events %}
+    <h3>Events at this Location</h3>
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Organizers</th>
+        </tr>
+        {% for event in events %}
+        <tr>
+            <td>{{ event.date }}</td>
+            <td>{{ event.time_of_day }}</td>
+            <td>
+                {% for org in event.organizers.all %}
+                    {{ org.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No events at this location.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,49 @@
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Locations</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        .filter-form { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Locations</h2>
+    
+    <div class="filter-form">
+        <form method="get">
+            <label>
+                <input type="checkbox" name="filter_zero_coords" value="1" 
+                       {% if filter_zero_coords %}checked{% endif %}
+                       onchange="this.form.submit();">
+                Show only unconnected locations
+            </label>
+        </form>
+    </div>
+    
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>In Location</th>
+            <th>Country</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+        </tr>
+        {% for item in location_data %}
+        <tr>
+            <td>
+                <a href="{% url 'location_detail' item.location.id %}">
+                    {{ item.location.name|title }}
+                </a>
+            </td>
+            <td>{{ item.chain }}</td>
+            <td>{{ item.location.in_country.name|title }}</td>
+            <td>{{ item.location.lat }}</td>
+            <td>{{ item.location.lon }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

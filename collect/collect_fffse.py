@@ -1,6 +1,6 @@
 
 import datetime, json, requests
-from core.models import Event, Country, Organization
+from core.models import Event, Country, Organization, Location
 from .collect_base import Collector
 from .models import Record
 
@@ -38,7 +38,23 @@ class Collect_fffse(Collector):
         fff_sweden = Organization.objects.get(name='Fridays For Future Sweden')
         for item in self.responses:
             print(f"     Response id {item['RTIME']} submitted at {datetime.datetime.utcfromtimestamp(item['RTIME'])}")
+            print(item)
             try:
+                ecity = item.get('ECITY', '').strip()
+                loc = Location.objects.filter(
+                    name__iexact=ecity,
+                    in_country=sweden
+                ).first()
+                if not loc:
+                    print(f"     Creating new location for {ecity} in {sweden.name}")
+                    loc = Location.objects.create(
+                        name=ecity,
+                        in_country=sweden,
+                        lat=item.get('ELAT', 0.0),
+                        lon=item.get('ELON', 0.0)
+                    )
+                    loc.save()
+
                 event = Event.objects.create(
                     id = f'{self.source.id}:{item["RTIME"]}',
                     ext_data_src = self.source.id,

@@ -8,10 +8,25 @@
         th, td { border: 1px solid #ccc; padding: 8px; }
         .folded { background: #f9f9f9; }
         .records-table { margin: 8px 0 8px 24px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { 
+            background: #2d662d; 
+            color: #fff; 
+            padding: 8px 16px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            margin-right: 10px;
+        }
+        .nav-links a:hover { background: #228b22; }
     </style>
 </head>
 <body>
     <h2>Collection Sources</h2>
+    
+    <div class="nav-links">
+        <a href="{% url 'location_view' %}">View Locations</a>
+    </div>
+    
     <table>
         <tr>
             <th>Source ID</th>
