@@ -1,0 +1,172 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Rings - ZenChanger</title>
+    <style>
+        .ring-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .ring-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .ring-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .ring-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d662d;
+        }
+        .member-list {
+            margin: 15px 0;
+        }
+        .member-item {
+            display: inline-block;
+            background: #e6f3ff;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .create-ring-section {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 300px;
+        }
+        .messages {
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+    </style>
+</head>
+<body>
+    <div class="ring-container">
+        <div class="nav-links">
+            <a href="{% url "home" %}">← Back to Home</a>
+        </div>
+        
+        <h2>Manage Rings</h2>
+        
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Create new ring section -->
+        <div class="create-ring-section">
+            <h3>Create New Ring</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" name="ring_name" placeholder="Enter ring name" required>
+                </div>
+                <button type="submit" class="btn">Create Ring</button>
+            </form>
+        </div>
+        
+        <!-- Existing rings -->
+        {% if ring_data %}
+            {% for item in ring_data %}
+            <div class="ring-card">
+                <div class="ring-header">
+                    <div class="ring-name">{{ item.ring.name }}</div>
+                </div>
+                
+                <div class="member-list">
+                    <strong>Members ({{ item.member_count }}):</strong><br>
+                    {% for member in item.members %}
+                    <span class="member-item">{{ member.username }}</span>
+                    {% endfor %}
+                </div>
+                
+                <div class="ring-actions">
+                    <a href="{% url 'ring_add_view' item.ring.id %}" class="btn btn-secondary">
+                        Add Members
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="ring-card">
+                <p>You are not a member of any rings yet. Create your first ring above!</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

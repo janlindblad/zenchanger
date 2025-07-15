@@ -1,0 +1,176 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Members to {{ ring.name }} - ZenChanger</title>
+    <style>
+        .add-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .ring-info {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        .ring-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d662d;
+            margin-bottom: 15px;
+        }
+        .member-list {
+            margin: 15px 0;
+        }
+        .member-item {
+            display: inline-block;
+            background: #e6f3ff;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .add-form {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fff;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .messages {
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+        .no-users {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="add-container">
+        <div class="nav-links">
+            <a href="{% url 'ring_view' %}">← Back to Rings</a>
+        </div>
+        
+        <h2>Add Members to Ring</h2>
+        
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Ring info -->
+        <div class="ring-info">
+            <div class="ring-name">{{ ring.name }}</div>
+            <div class="member-list">
+                <strong>Current Members ({{ current_members.count }}):</strong><br>
+                {% for member in current_members %}
+                <span class="member-item">{{ member.username }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Add member form -->
+        <div class="add-form">
+            <h3>Add New Member</h3>
+            
+            {% if eligible_users %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="user_id">Select User to Add:</label>
+                    <select name="user_id" id="user_id" required>
+                        <option value="">-- Choose a user --</option>
+                        {% for user in eligible_users %}
+                        <option value="{{ user.id }}">{{ user.username }}{% if user.first_name or user.last_name %} ({{ user.first_name }} {{ user.last_name }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn">Add Member</button>
+                <a href="{% url 'ring_view' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+            {% else %}
+            <div class="no-users">
+                <p>No eligible users found.</p>
+                <p>Users must have encryption keys set up and not already be members of this ring.</p>
+                <a href="{% url 'ring_view' %}" class="btn btn-secondary">Back to Rings</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

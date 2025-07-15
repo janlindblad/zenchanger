@@ -2,14 +2,14 @@ from django.contrib.auth.models import User, Group
 from django.db import models
 
 class Ring(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return f"Ring {self.name.title()}"
 
 class RingKey(models.Model):
-    ring = models.OneToOneField(Ring, on_delete=models.CASCADE)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    ring = models.ForeignKey(Ring, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     encrypted_key = models.CharField(max_length=255)  # base64_encrypted_key
 
     class Meta:
