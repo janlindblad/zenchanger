@@ -13,7 +13,7 @@ class Source(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"Source {self.id} - {'Enabled' if self.enabled else 'Disabled'}"
+        return f"Source {self.id}"
 
 class Record(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE, related_name='records')

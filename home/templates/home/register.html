@@ -2,9 +2,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - ZenChanger</title>
+    <title>Register - ZenChanger</title>
     <style>
-        .login-container {
+        .register-container {
             max-width: 400px;
             margin: 50px auto;
             padding: 30px;
@@ -39,31 +39,22 @@
         .btn:hover {
             background: #228b22;
         }
-        .register-link {
+        .login-link {
             text-align: center;
             margin-top: 15px;
         }
-        .register-link a {
+        .login-link a {
             color: #2d662d;
             text-decoration: none;
         }
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
-        }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Sign In</h2>
-        
-        {% if form.non_field_errors %}
-            <div class="error">{{ form.non_field_errors }}</div>
-        {% endif %}
+    <div class="register-container">
+        <h2>Create Account</h2>
         
         <form method="post">
             {% csrf_token %}
@@ -71,23 +62,31 @@
                 <label for="{{ form.username.id_for_label }}">Username:</label>
                 {{ form.username }}
                 {% if form.username.errors %}
-                    <div class="error">{{ form.username.errors }}</div>
+                    <div style="color: red; font-size: 12px;">{{ form.username.errors }}</div>
                 {% endif %}
             </div>
             
             <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">Password:</label>
-                {{ form.password }}
-                {% if form.password.errors %}
-                    <div class="error">{{ form.password.errors }}</div>
+                <label for="{{ form.password1.id_for_label }}">Password:</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div style="color: red; font-size: 12px;">{{ form.password1.errors }}</div>
                 {% endif %}
             </div>
             
-            <button type="submit" class="btn">Sign In</button>
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div style="color: red; font-size: 12px;">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn">Create Account</button>
         </form>
         
-        <div class="register-link">
-            Don't have an account? <a href="{% url 'register' %}">Create one here</a>
+        <div class="login-link">
+            Already have an account? <a href="{% url 'login' %}">Sign in here</a>
         </div>
     </div>
 </body>

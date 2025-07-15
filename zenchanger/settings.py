@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core', 
     'home',
+    'ring',
     'collect',
     'simple_history',
 ]
