@@ -1,42 +1,171 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>My Events</title>
     {% include "core/base_header.html" %}
+    <style>
+        .rings-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .ring-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #fff;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        .ring-name {
+            font-weight: bold;
+            color: #2d662d;
+        }
+        .copy-btn {
+            background: #2d662d;
+            color: white;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .copy-btn:hover {
+            background: #228b22;
+        }
+        .copy-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .nav-links {
+            margin: 20px 0;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .events-section {
+            margin-bottom: 30px;
+        }
+        .no-rings {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Events Related to Your Organizations</h2>
-    {% if events == None %}
-        <p>You must be logged in to view your events.</p>
-    {% elif events %}
-        <table border="1" cellpadding="6">
-            <tr>
-                <th>Date</th>
-                <th>Time of Day</th>
-                <th>Country</th>
-                <th>Location</th>
-                <th>Organizers</th>
-            </tr>
-            {% for event in events %}
-            <tr>
-                <td>{{ event.date }}</td>
-                <td>{{ event.time_of_day }}</td>
-                <td>{{ event.country.name }}</td>
-                <td>{% if event.location %}{{ event.location.name }}{% else %}-{% endif %}</td>
-                <td>
-                    {% for org in event.organizers.all %}
-                        {{ org.name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </td>
-            </tr>
+    <div class="events-section">
+        <h2>Events Related to Your Organizations</h2>
+        {% if events == None %}
+            <p>You must be logged in to view your events.</p>
+        {% elif events %}
+            <table border="1" cellpadding="6">
+                <tr>
+                    <th>Date</th>
+                    <th>Time of Day</th>
+                    <th>Country</th>
+                    <th>Location</th>
+                    <th>Organizers</th>
+                </tr>
+                {% for event in events %}
+                <tr>
+                    <td>{{ event.date }}</td>
+                    <td>{{ event.time_of_day }}</td>
+                    <td>{{ event.country.name }}</td>
+                    <td>{% if event.location %}{{ event.location.name }}{% else %}-{% endif %}</td>
+                    <td>
+                        {% for org in event.organizers.all %}
+                            {{ org.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>You have no related events.</p>
+        {% endif %}
+    </div>
+
+    <!-- Rings Section -->
+    <div class="rings-section">
+        <h2>Your Rings</h2>
+        {% if user_rings %}
+            {% for ring in user_rings %}
+            <div class="ring-item">
+                <span class="ring-name">{{ ring.name }}</span>
+                <button class="copy-btn" onclick="copyRingLink({{ ring.id }}, '{{ ring.name }}')">
+                    Copy Key Link
+                </button>
+            </div>
             {% endfor %}
-        </table>
-    {% else %}
-        <p>You have no related events.</p>
-    {% endif %}
+        {% else %}
+            <div class="no-rings">
+                <p>You are not a member of any rings yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
     <div class="nav-links">
         <a href="{% url 'ring_view' %}">Manage Rings</a>
+        <a href="{% url 'secret_view' %}">View Secrets</a>
     </div>
+
+    <script>
+        async function copyRingLink(ringId, ringName) {
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            try {
+                button.disabled = true;
+                button.textContent = 'Generating...';
+                
+                // Use your existing create_magic_link endpoint
+                const response = await fetch(`/ring/create_magic_link/?ring_id=${ringId}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate magic link');
+                }
+                
+                const data = await response.json();
+                const magicLink = data.link;
+                
+                // Copy to clipboard
+                await navigator.clipboard.writeText(magicLink);
+                
+                button.textContent = 'Copied!';
+                
+                // Show success message
+                alert(`Ring key link for "${ringName}" copied to clipboard!\n\nShare this link with another device to import the ring key:\n\n${magicLink}`);
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error copying ring link:', error);
+                alert('Failed to generate or copy link. Please try again.');
+                
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
