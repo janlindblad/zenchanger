@@ -6,11 +6,28 @@ from django.http import JsonResponse
 from ring.models import Ring, RingKey, UserKey
 
 @login_required
+def get_user_public_key(request):
+    try:
+        user_key = UserKey.objects.get(user=request.user)
+        return JsonResponse({'public_key': user_key.public_key})
+    except UserKey.DoesNotExist:
+        return JsonResponse({'error': 'No public key found for user'}, status=404)
+
+@login_required 
+def get_ring_key(request, ring_id):
+    try:
+        ring_key = RingKey.objects.get(ring_id=ring_id, user=request.user)
+        return JsonResponse({'encrypted_key': ring_key.encrypted_key})
+    except RingKey.DoesNotExist:
+        return JsonResponse({'error': 'Ring key not found'}, status=404)
+
+@login_required
 def ring_view(request):
     # Handle POST requests for creating new rings
     if request.method == 'POST':
         ring_name = request.POST.get('ring_name', '').strip()
-        if ring_name:
+        encrypted_key = request.POST.get('encrypted_key', '').strip()
+        if ring_name and encrypted_key:
             try:
                 # Create new ring
                 ring = Ring.objects.create(name=ring_name)
@@ -19,7 +36,7 @@ def ring_view(request):
                 RingKey.objects.create(
                     ring=ring,
                     user=request.user,
-                    encrypted_key=""  # Will be populated when keys are generated
+                    encrypted_key=encrypted_key
                 )
                 
                 messages.success(request, f'Ring "{ring_name}" created successfully!')
@@ -27,8 +44,8 @@ def ring_view(request):
             except Exception as e:
                 messages.error(request, f'Error creating ring: {str(e)}')
         else:
-            messages.error(request, 'Ring name cannot be empty')
-    
+            messages.error(request, 'Ring name and encrypted key cannot be empty')
+
     # Get rings where user is a member
     user_ring_keys = RingKey.objects.filter(user=request.user).select_related('ring')
     
@@ -49,7 +66,7 @@ def ring_view(request):
     })
 
 @login_required
-def ring_add_view(request, ring_id):
+def ring_add_user_view(request, ring_id):
     ring = get_object_or_404(Ring, id=ring_id)
     
     # Check if current user is a member of this ring
@@ -93,7 +110,7 @@ def ring_add_view(request, ring_id):
     # Get current members for display
     current_members = User.objects.filter(ringkey__ring=ring).order_by('username')
     
-    return render(request, 'home/ring_add.html', {
+    return render(request, 'home/ring_add_user.html', {
         'ring': ring,
         'eligible_users': eligible_users,
         'current_members': current_members

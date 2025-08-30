@@ -1,9 +1,9 @@
+{% load static %}
+{% include "core/base_header.html" %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Add Members to {{ ring.name }} - ZenChanger</title>
-    {% load static %}
-    {% include "core/base_header.html" %}
     <style>
         .add-container {
             max-width: 600px;
@@ -118,6 +118,7 @@
     <div class="add-container">
         <div class="nav-links">
             <a href="{% url 'ring_view' %}">← Back to Rings</a>
+            <a href="{% url 'home' %}">Home</a>
         </div>
         
         <h2>Add Members to Ring</h2>
@@ -138,9 +139,13 @@
             <div class="ring-name">{{ ring.name }}</div>
             <div class="member-list">
                 <strong>Current Members ({{ current_members.count }}):</strong><br>
-                {% for member in current_members %}
-                <span class="member-item">{{ member.username }}</span>
-                {% endfor %}
+                {% if current_members %}
+                    {% for member in current_members %}
+                    <span class="member-item">{{ member.username }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span style="color: #666; font-style: italic;">No members yet</span>
+                {% endif %}
             </div>
         </div>
         
@@ -156,7 +161,12 @@
                     <select name="user_id" id="user_id" required>
                         <option value="">-- Choose a user --</option>
                         {% for user in eligible_users %}
-                        <option value="{{ user.id }}">{{ user.username }}{% if user.first_name or user.last_name %} ({{ user.first_name }} {{ user.last_name }}){% endif %}</option>
+                        <option value="{{ user.id }}">
+                            {{ user.username }}
+                            {% if user.first_name or user.last_name %}
+                                ({{ user.first_name }} {{ user.last_name }})
+                            {% endif %}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -165,7 +175,7 @@
             </form>
             {% else %}
             <div class="no-users">
-                <p>No eligible users found.</p>
+                <p><strong>No eligible users found.</strong></p>
                 <p>Users must have encryption keys set up and not already be members of this ring.</p>
                 <a href="{% url 'ring_view' %}" class="btn btn-secondary">Back to Rings</a>
             </div>

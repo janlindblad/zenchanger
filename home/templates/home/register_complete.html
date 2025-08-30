@@ -1,9 +1,9 @@
-{% include "core/base_header.html" %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Complete Registration - ZenChanger</title>
     {% load static %}
+    {% include "core/base_header.html" %}
     <style>
         .complete-container {
             max-width: 500px;
@@ -56,7 +56,7 @@
         <button id="next-button" class="btn">Generate Encryption Keys</button>
         
         <script type="module">
-            import { generateAndStoreKeypair } from '{% static "ring/js/keygen.js" %}';
+            import { generateAndStoreKeypair } from '{% static "ring/js/userkey_gen.js" %}';
             
             document.getElementById('next-button').addEventListener('click', async function() {
                 const button = this;

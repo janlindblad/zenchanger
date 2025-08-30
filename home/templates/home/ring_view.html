@@ -1,9 +1,9 @@
-{% load static %}
-{% include "core/base_header.html" %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Manage Rings - ZenChanger</title>
+    {% load static %}
+    {% include "core/base_header.html" %}
     <style>
         .ring-container {
             max-width: 800px;
@@ -112,7 +112,7 @@
 <body>
     <div class="ring-container">
         <div class="nav-links">
-            <a href="{% url "home" %}">← Back to Home</a>
+            <a href="{% url 'home' %}">← Back to Home</a>
         </div>
         
         <h2>Manage Rings</h2>
@@ -131,12 +131,13 @@
         <!-- Create new ring section -->
         <div class="create-ring-section">
             <h3>Create New Ring</h3>
-            <form method="post">
+            <form method="post" id="create-ring-form">
                 {% csrf_token %}
                 <div class="form-group">
                     <input type="text" name="ring_name" placeholder="Enter ring name" required>
                 </div>
-                <button type="submit" class="btn">Create Ring</button>
+                <input type="hidden" name="encrypted_key" id="encrypted_key">
+                <button type="submit" class="btn" onclick="return generateAndSetEncryptedKey(event)">Create Ring</button>
             </form>
         </div>
         
@@ -156,7 +157,7 @@
                 </div>
                 
                 <div class="ring-actions">
-                    <a href="{% url 'ring_add_view' item.ring.id %}" class="btn btn-secondary">
+                    <a href="{% url 'ring_add_user_view' item.ring.id %}" class="btn btn-secondary">
                         Add Members
                     </a>
                 </div>
@@ -168,5 +169,11 @@
             </div>
         {% endif %}
     </div>
+
+<script type="module">
+    import { getUserPublicKey } from '{% static "ring/js/userkey_get.js" %}';
+    import { generateRecordKey, generateAndSetEncryptedKey } from '{% static "ring/js/reckey.js" %}';
+</script>
+
 </body>
 </html>
