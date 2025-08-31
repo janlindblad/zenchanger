@@ -1,0 +1,455 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Event{% endblock %} - ZenChanger</title>
+    <style>
+        .event-container {
+            max-width: {% block container_width %}900px{% endblock %};
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            {% block nav_align %}{% endblock %}
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        
+        /* Messages */
+        .messages {
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Buttons */
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        /* Badges and Tags */
+        .badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-gc {
+            background: #28a745;
+        }
+        .organizer-tag {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            border: 1px solid #b3d9ff;
+        }
+        .organizers-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            {% block organizers_align %}margin-top: 8px;{% endblock %}
+        }
+        
+        /* Event Details */
+        .event-detail {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .event-detail strong {
+            color: #333;
+            min-width: 100px;
+        }
+        .event-detail span {
+            color: #666;
+            flex: 1;
+            text-align: right;
+        }
+        
+        /* Form Styles */
+        .form-container {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .required {
+            color: red;
+        }
+        .auto-field {
+            font-size: 0.8em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        /* Search Components */
+        .search-container {
+            position: relative;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .search-result {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result:hover {
+            background: #f0f0f0;
+        }
+        .search-result.create-new {
+            background: #e6f3ff;
+            font-weight: bold;
+        }
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .selected-item {
+            background: #e6f3ff;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .remove-item {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        <div class="nav-links">
+            {% block nav_links %}{% endblock %}
+        </div>
+
+        {% block heading %}{% endblock %}
+
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        {% block base_scripts %}
+        // Common form JavaScript (only loads when needed)
+        function initializeEventForm() {
+            // Initialize selected organizers
+            let selectedOrganizerIds = [{% block initial_organizer_ids %}{% endblock %}];
+
+            // Location search functionality
+            let locationSearchTimeout;
+            const locationSearch = document.getElementById('location-search');
+            const locationResults = document.getElementById('location-results');
+            const locationInput = document.getElementById('location');
+            const selectedLocation = document.getElementById('selected-location');
+            const selectedCountry = document.getElementById('selected-country');
+
+            if (locationSearch) {
+                locationSearch.addEventListener('input', function() {
+                    clearTimeout(locationSearchTimeout);
+                    const query = this.value.trim();
+                    
+                    if (query.length < 2) {
+                        locationResults.style.display = 'none';
+                        return;
+                    }
+                    
+                    locationSearchTimeout = setTimeout(() => {
+                        searchLocations(query);
+                    }, 300);
+                });
+            }
+
+            async function searchLocations(query) {
+                try {
+                    const response = await fetch(`/api/search-locations/?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    locationResults.innerHTML = '';
+                    
+                    // Add "Create new location" option if no exact match
+                    const hasExactMatch = data.locations && data.locations.some(loc => 
+                        loc.name.toLowerCase() === query.toLowerCase()
+                    );
+                    
+                    if (!hasExactMatch && query.length >= 3) {
+                        const createDiv = document.createElement('div');
+                        createDiv.className = 'search-result create-new';
+                        createDiv.innerHTML = `🔍 Create new location: <strong>${query}</strong>`;
+                        createDiv.addEventListener('click', () => createNewLocation(query));
+                        locationResults.appendChild(createDiv);
+                    }
+                    
+                    // Add existing locations
+                    if (data.locations && data.locations.length > 0) {
+                        data.locations.forEach(location => {
+                            const div = document.createElement('div');
+                            div.className = 'search-result';
+                            div.textContent = location.display;
+                            div.addEventListener('click', () => selectLocation(location));
+                            locationResults.appendChild(div);
+                        });
+                    }
+                    
+                    if (locationResults.children.length > 0) {
+                        locationResults.style.display = 'block';
+                    } else {
+                        locationResults.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error searching locations:', error);
+                }
+            }
+            
+            async function createNewLocation(query) {
+                locationResults.style.display = 'none';
+                
+                try {
+                    const response = await fetch('/locations/quick-create/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: `search_query=${encodeURIComponent(query)}`
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        selectLocation(data.location);
+                        alert(`Location "${data.location.name}" created successfully!`);
+                    } else if (data.multiple_results) {
+                        const url = `/locations/create/?q=${encodeURIComponent(query)}&return_to=event`;
+                        window.open(url, 'create_location', 'width=900,height=700,scrollbars=yes');
+                    } else {
+                        alert(`Error creating location: ${data.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error creating location:', error);
+                    alert('Error creating location. Please try again.');
+                }
+            }
+            
+            window.handleLocationCreated = function(locationData) {
+                selectLocation(locationData);
+                alert(`Location "${locationData.name}" created successfully!`);
+            };
+
+            function selectLocation(location) {
+                locationSearch.value = location.display;
+                locationInput.value = location.id;
+                selectedLocation.textContent = `Selected: ${location.display}`;
+                selectedCountry.textContent = location.country;
+                locationResults.style.display = 'none';
+            }
+
+            // Organizer search functionality
+            let organizerSearchTimeout;
+            const organizerSearch = document.getElementById('organizer-search');
+            const organizerResults = document.getElementById('organizer-results');
+            const selectedOrganizers = document.getElementById('selected-organizers');
+
+            if (organizerSearch) {
+                organizerSearch.addEventListener('input', function() {
+                    clearTimeout(organizerSearchTimeout);
+                    const query = this.value.trim();
+                    
+                    if (query.length < 2) {
+                        organizerResults.style.display = 'none';
+                        return;
+                    }
+                    
+                    organizerSearchTimeout = setTimeout(() => {
+                        searchOrganizers(query);
+                    }, 300);
+                });
+            }
+
+            async function searchOrganizers(query) {
+                try {
+                    const response = await fetch(`/api/search-organizations/?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    organizerResults.innerHTML = '';
+                    
+                    if (data.organizations.length > 0) {
+                        data.organizations.forEach(org => {
+                            if (!selectedOrganizerIds.includes(org.id)) {
+                                const div = document.createElement('div');
+                                div.className = 'search-result';
+                                div.textContent = org.name;
+                                div.addEventListener('click', () => addOrganizer(org));
+                                organizerResults.appendChild(div);
+                            }
+                        });
+                        organizerResults.style.display = 'block';
+                    } else {
+                        organizerResults.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error searching organizations:', error);
+                }
+            }
+
+            function addOrganizer(org) {
+                if (selectedOrganizerIds.includes(org.id)) return;
+                
+                selectedOrganizerIds.push(org.id);
+                
+                const div = document.createElement('div');
+                div.className = 'selected-item';
+                div.innerHTML = `
+                    ${org.name}
+                    <button type="button" class="remove-item" onclick="removeOrganizer(${org.id}, this.parentElement)">×</button>
+                    <input type="hidden" name="organizers" value="${org.id}">
+                `;
+                
+                selectedOrganizers.appendChild(div);
+                organizerSearch.value = '';
+                organizerResults.style.display = 'none';
+            }
+
+            window.removeOrganizer = function(orgId, element) {
+                selectedOrganizerIds = selectedOrganizerIds.filter(id => id !== orgId);
+                element.remove();
+            };
+
+            // Hide search results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    if (locationResults) locationResults.style.display = 'none';
+                    if (organizerResults) organizerResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize form functionality if form exists
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('event-form')) {
+                initializeEventForm();
+            }
+        });
+        {% endblock %}
+
+        {% block scripts %}{% endblock %}
+    </script>
+</body>
+</html>

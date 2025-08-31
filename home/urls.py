@@ -10,6 +10,7 @@ from .event_views import (
     event_edit_view, event_delete_view, location_events_view,
     get_locations_by_country, search_locations, search_organizations
 )
+from .location_views import location_create_view, location_search_popup, location_quick_create
 
 urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
@@ -28,9 +29,14 @@ urlpatterns = [
     path('events/<str:event_id>/edit/', event_edit_view, name='event_edit'),
     path('events/<str:event_id>/delete/', event_delete_view, name='event_delete'),
     path('locations/<int:location_id>/events/', location_events_view, name='location_events'),
-    
+
+    # Location management URLs
+    path('locations/create/', location_create_view, name='location_create'),
+    path('locations/quick-create/', location_quick_create, name='location_quick_create'),
+
     # AJAX endpoints
     path('api/locations-by-country/', get_locations_by_country, name='get_locations_by_country'),
     path('api/search-locations/', search_locations, name='search_locations'),
     path('api/search-organizations/', search_organizations, name='search_organizations'),
+    path('api/location-search-popup/', location_search_popup, name='location_search_popup'),
 ]

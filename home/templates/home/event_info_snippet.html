@@ -1,0 +1,58 @@
+<div class="event-detail">
+    <strong>Date:</strong>
+    <span>{{ event.date|date:"l, F j, Y" }}</span>
+</div>
+
+<div class="event-detail">
+    <strong>Time:</strong>
+    <span>{{ event.time_of_day }}</span>
+</div>
+
+<div class="event-detail">
+    <strong>Country:</strong>
+    <span>{{ event.country.name|title }}</span>
+</div>
+
+<div class="event-detail">
+    <strong>Location:</strong>
+    <span>
+        {% if event.location %}
+        {% if show_location_link %}
+        <a href="{% url 'location_events' event.location.id %}" style="color: #2d662d; text-decoration: none;">
+            {{ event.location.name|title }}
+        </a>
+        {% else %}
+        {{ event.location.name|title }}
+        {% endif %}
+        {% else %}
+        <em>No specific location</em>
+        {% endif %}
+    </span>
+</div>
+
+<div class="event-detail">
+    <strong>Organizers:</strong>
+    <span>
+        {% if event.organizers.all %}
+        <div class="organizers-list" style="justify-content: flex-end;">
+            {% for organizer in event.organizers.all %}
+            <span class="organizer-tag">{{ organizer.name }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <em>No organizers</em>
+        {% endif %}
+    </span>
+</div>
+
+<div class="event-detail">
+    <strong>Created:</strong>
+    <span>{{ event.date_created|date:"M j, Y \a\t g:i A" }}</span>
+</div>
+
+{% if event.date_modified != event.date_created %}
+<div class="event-detail">
+    <strong>Modified:</strong>
+    <span>{{ event.date_modified|date:"M j, Y \a\t g:i A" }}</span>
+</div>
+{% endif %}
