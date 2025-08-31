@@ -4,6 +4,9 @@
 {% block container_width %}800px{% endblock %}
 
 {% block nav_links %}
+{% if prefill_location %}
+<a href="{% url 'location_events' prefill_location.id %}">← Back to {{ prefill_location.name|title }}</a>
+{% endif %}
 <a href="{% url 'event_list' %}">← Back to Events</a>
 <a href="{% url 'home' %}">Home</a>
 {% endblock %}
@@ -42,15 +45,26 @@
             <div class="help-text">Estimated number of participants (optional)</div>
         </div>
 
-        <!-- Location -->
+        <!-- Location Field (same structure as event forms) -->
         <div class="form-group">
             <label for="location-search">Location <span class="required">*</span></label>
             <div class="search-container">
-                <input type="text" id="location-search" placeholder="Start typing location name..." autocomplete="off">
+                <input type="text" id="location-search" 
+                       {% if prefill_location %}
+                       value="{{ prefill_location.name|title }} ({{ prefill_location.in_country.name|title }})"
+                       {% endif %}
+                       placeholder="Start typing location name..." autocomplete="off">
                 <div id="location-results" class="search-results"></div>
-                <input type="hidden" id="location" name="location" required>
+                <input type="hidden" id="location" name="location" 
+                       {% if prefill_location %}value="{{ prefill_location.id }}"{% endif %} required>
             </div>
-            <div id="selected-location" class="help-text">Country will be determined from selected location</div>
+            <div id="selected-location" class="help-text">
+                {% if prefill_location %}
+                    <strong>Pre-selected:</strong> {{ prefill_location.full_name }}
+                {% else %}
+                    Country will be determined from selected location
+                {% endif %}
+            </div>
         </div>
 
         <!-- Recurrence Pattern -->
@@ -92,12 +106,12 @@
             <div class="form-group">
                 <label for="recur_until">End Date</label>
                 <input type="date" id="recur_until" name="recur_until" 
-                       value="{{ request.POST.recur_until }}">
-                <div class="help-text">When recurring events end (optional)</div>
+                       value="{{ request.POST.recur_until|default:month_later }}">
+                <div class="help-text">When recurring events end (optional, defaults to 1 month)</div>
             </div>
         </div>
 
-        <!-- Organizers -->
+        <!-- Organizers Field (same structure as event forms) -->
         <div class="form-group">
             <label for="organizer-search">Organizers</label>
             <div class="search-container">

@@ -86,32 +86,50 @@ def event_list_view(request):
             'error': str(e)
         })
 
+# Add this import at the top of the file
+from datetime import datetime, date, timedelta
+
 @login_required
 def event_create_view(request):
     """Create a new event"""
+    # Get pre-filled location from URL parameter
+    prefill_location_id = request.GET.get('location')
+    prefill_location = None
+    
+    if prefill_location_id:
+        try:
+            prefill_location = Location.objects.get(id=prefill_location_id)
+        except (Location.DoesNotExist, ValueError):
+            prefill_location = None
+    
     if request.method == 'POST':
-        date_str = request.POST.get('date')
-        location_id = request.POST.get('location')
+        event_date_str = request.POST.get('date')  # Renamed to avoid conflict
         time_of_day = request.POST.get('time_of_day')
+        location_id = request.POST.get('location')
         organizer_ids = request.POST.getlist('organizers')
         
         # Enhanced validation with specific error messages
         errors = []
         
         # Validate date
-        if not date_str:
+        if not event_date_str:
             errors.append("Date is required")
         else:
             try:
-                parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                event_date = datetime.strptime(event_date_str, '%Y-%m-%d').date()
             except ValueError:
                 errors.append("Date format is invalid")
+                event_date = None
         
         # Validate time
         if not time_of_day:
             errors.append("Time is required")
-        elif not re.match(r'^\d{2}:\d{2}$', time_of_day):
-            errors.append("Time format is invalid (must be HH:MM)")
+        else:
+            try:
+                event_time = datetime.strptime(time_of_day, '%H:%M').time()
+            except ValueError:
+                errors.append("Time format is invalid")
+                event_time = None
         
         # Validate location
         if not location_id:
@@ -132,29 +150,13 @@ def event_create_view(request):
                 location = Location.objects.get(id=location_id)
                 country = location.in_country
                 
-                # Generate auto-incremented event ID
-                last_gc_event = Event.objects.filter(id__startswith='gc:').order_by('-id').first()
-                if last_gc_event:
-                    last_number = int(last_gc_event.id.split(':')[1])
-                    new_number = last_number + 1
-                else:
-                    new_number = 1
-                
-                event_id = f"gc:{new_number}"
-                
-                # Check if event ID already exists (shouldn't happen, but safety check)
-                while Event.objects.filter(id=event_id).exists():
-                    new_number += 1
-                    event_id = f"gc:{new_number}"
-                
                 # Create event
                 event = Event.objects.create(
-                    id=event_id,
-                    ext_data_src="gc",
-                    date=parsed_date,
-                    country=country,
+                    date=event_date,
+                    time_of_day=event_time,
                     location=location,
-                    time_of_day=time_of_day
+                    country=country,
+                    created_by=request.user
                 )
                 
                 # Add organizers
@@ -162,7 +164,7 @@ def event_create_view(request):
                     organizers = Organization.objects.filter(id__in=organizer_ids)
                     event.organizers.set(organizers)
                 
-                messages.success(request, f'Event "{event_id}" created successfully.')
+                messages.success(request, f'Event {event.id} created successfully.')
                 return redirect('event_detail', event_id=event.id)
                 
             except Exception as e:
@@ -171,20 +173,11 @@ def event_create_view(request):
     # Get form data
     organizations = Organization.objects.order_by('name')
     
-    # Generate preview event ID
-    last_gc_event = Event.objects.filter(id__startswith='gc:').order_by('-id').first()
-    if last_gc_event:
-        next_number = int(last_gc_event.id.split(':')[1]) + 1
-    else:
-        next_number = 1
-    preview_event_id = f"gc:{next_number}"
-    
     return render(request, 'home/event_create.html', {
         'organizations': organizations,
-        'today': date.today().isoformat(),
-        'preview_event_id': preview_event_id,
+        'today': date.today().isoformat(),  # Now this works correctly
+        'prefill_location': prefill_location,
     })
-
 @login_required
 def event_detail_view(request, event_id):
     """View event details"""
@@ -383,13 +376,20 @@ def search_organizations(request):
     
     return JsonResponse({'organizations': org_data})
 
-# Update the eventplan_create_view function
-
 @login_required
 def eventplan_create_view(request):
     """Create a new event plan"""
+    # Get pre-filled location from URL parameter
+    prefill_location_id = request.GET.get('location')
+    prefill_location = None
+    
+    if prefill_location_id:
+        try:
+            prefill_location = Location.objects.get(id=prefill_location_id)
+        except (Location.DoesNotExist, ValueError):
+            prefill_location = None
+    
     if request.method == 'POST':
-        # ... existing POST logic remains the same ...
         name = request.POST.get('name')
         description = request.POST.get('description', '')
         location_id = request.POST.get('location')
@@ -397,8 +397,8 @@ def eventplan_create_view(request):
         organizer_ids = request.POST.getlist('organizers')
         weekday = request.POST.get('weekday')
         recurrence = request.POST.get('recurrence')
-        recur_from = request.POST.get('recur_from')
-        recur_until = request.POST.get('recur_until')
+        recur_from_str = request.POST.get('recur_from')  # Renamed to avoid conflicts
+        recur_until_str = request.POST.get('recur_until')  # Renamed to avoid conflicts
         
         # Enhanced validation with specific error messages
         errors = []
@@ -433,18 +433,18 @@ def eventplan_create_view(request):
                 errors.append("Weekday must be specified for recurring events")
         
         # Validate date range
-        if recur_from:
+        if recur_from_str:
             try:
-                recur_from_date = datetime.strptime(recur_from, '%Y-%m-%d').date()
+                recur_from_date = datetime.strptime(recur_from_str, '%Y-%m-%d').date()
             except ValueError:
                 errors.append("Start date format is invalid")
                 recur_from_date = None
         else:
             recur_from_date = None
             
-        if recur_until:
+        if recur_until_str:
             try:
-                recur_until_date = datetime.strptime(recur_until, '%Y-%m-%d').date()
+                recur_until_date = datetime.strptime(recur_until_str, '%Y-%m-%d').date()
             except ValueError:
                 errors.append("End date format is invalid")
                 recur_until_date = None
@@ -493,17 +493,18 @@ def eventplan_create_view(request):
     organizations = Organization.objects.order_by('name')
     
     # Calculate month later date
-    from datetime import timedelta
     today = date.today()
     month_later = today + timedelta(days=30)  # Approximate month
     
     return render(request, 'home/eventplan_create.html', {
         'organizations': organizations,
         'today': today.isoformat(),
-        'month_later': month_later.isoformat(),  # Add this line
+        'month_later': month_later.isoformat(),
         'weekday_choices': EventPlan.Weekday.choices,
         'recurrence_choices': EventPlan.Recurrence.choices,
+        'prefill_location': prefill_location,
     })
+
 @login_required
 def eventplan_detail_view(request, plan_id):
     """View event plan details"""

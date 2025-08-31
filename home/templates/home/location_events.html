@@ -163,8 +163,8 @@
         <div class="nav-links">
             <a href="{% url 'event_list' %}">← Back to All Events</a>
             <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'event_create' %}">Create New Event</a>
-            <a href="{% url 'eventplan_create' %}" class="btn-plan">Create Event Plan</a>
+            <a href="{% url 'event_create' %}?location={{ location.id }}">Create New Event</a>
+            <a href="{% url 'eventplan_create' %}?location={{ location.id }}" class="btn-plan">Create Event Plan</a>
         </div>
 
         <!-- Location Header -->
