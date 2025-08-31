@@ -187,6 +187,19 @@ def get_ring_key(request, ring_id):
     except RingKey.DoesNotExist:
         return JsonResponse({'error': 'Ring key not found'}, status=404)
     
+def import_key_view(request):
+    """Serve the import key page when someone visits the magic link"""
+    token = request.GET.get('token')
+    if not token:
+        return render(request, 'ring/import_error.html', {'error': 'No token provided'})
+    
+    # Check if token exists in session (optional validation)
+    session_key = f'key_token_{token}'
+    if session_key not in request.session:
+        return render(request, 'ring/import_error.html', {'error': 'Invalid or expired token'})
+    
+    return render(request, 'ring/import_key.html', {'token': token})
+
 
 
 
