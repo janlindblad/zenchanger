@@ -312,12 +312,19 @@ def event_delete_view(request, event_id):
     
     return render(request, 'home/event_delete.html', {'event': event})
 
+# Update the location_events_view function
+
 @login_required
 def location_events_view(request, location_id):
     """View events in a specific location"""
     location = get_object_or_404(Location, id=location_id)
     
     events = Event.objects.filter(location=location).select_related('country').prefetch_related('organizers').order_by('-date')
+    
+    # Get event plans for this location
+    event_plans = EventPlan.objects.filter(
+        location=location
+    ).select_related('location', 'country').prefetch_related('organizers').order_by('name')
     
     # Pagination
     paginator = Paginator(events, 50)
@@ -327,6 +334,7 @@ def location_events_view(request, location_id):
     return render(request, 'home/location_events.html', {
         'location': location,
         'page_obj': page_obj,
+        'event_plans': event_plans,  # Add this line
     })
 
 # AJAX helper view for getting locations by country

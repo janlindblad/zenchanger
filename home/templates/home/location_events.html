@@ -4,6 +4,7 @@
 <html>
 <head>
     <title>Events at {{ location.name|title }} - ZenChanger</title>
+    {% include "home/components/event_plans_styles.html" %}
     <style>
         .event-container {
             max-width: 1200px;
@@ -150,6 +151,11 @@
         .badge-gc {
             background: #28a745;
         }
+        .section-divider {
+            border-top: 2px solid #ddd;
+            margin: 30px 0;
+            padding-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -158,6 +164,7 @@
             <a href="{% url 'event_list' %}">← Back to All Events</a>
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'event_create' %}">Create New Event</a>
+            <a href="{% url 'eventplan_create' %}" class="btn-plan">Create Event Plan</a>
         </div>
 
         <!-- Location Header -->
@@ -169,93 +176,103 @@
                 {% if page_obj %}
                 {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
                 {% endif %}
+                {% if event_plans.count %}
+                • {{ event_plans.count }} event plan{{ event_plans.count|pluralize }}
+                {% endif %}
             </div>
         </div>
 
-        <!-- Events Table -->
-        {% if page_obj.object_list %}
-        <table class="event-table">
-            <thead>
-                <tr>
-                    <th>Event ID</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Organizers</th>
-                    <th>Source</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in page_obj %}
-                <tr>
-                    <td>
-                        <a href="{% url 'event_detail' event.id %}" class="event-link">{{ event.id }}</a>
-                        {% if event.ext_data_src == 'gc' %}
-                        <span class="badge badge-gc">GC</span>
-                        {% elif event.ext_data_src %}
-                        <span class="badge">{{ event.ext_data_src|upper }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ event.date|date:"M j, Y" }}</td>
-                    <td>{{ event.time_of_day }}</td>
-                    <td class="organizers">
-                        {% if event.organizers.all %}
-                            {% for org in event.organizers.all %}
-                            <span class="organizer-tag">{{ org.name }}</span>
-                            {% endfor %}
-                        {% else %}
-                            <span style="color: #999; font-style: italic;">None</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if event.ext_data_src == 'gc' %}
-                        Web
-                        {% elif event.ext_data_src %}
-                        {{ event.ext_data_src|upper }}
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'event_detail' event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.8em;">View</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <!-- Event Plans Section -->
+        {% include "home/components/event_plans_table.html" %}
 
-        <!-- Pagination -->
-        {% if page_obj.has_other_pages %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
-            {% endif %}
+        <!-- Events Section -->
+        <div class="section-divider">
+            <h3>📍 Individual Events at {{ location.name|title }}</h3>
+            
+            {% if page_obj.object_list %}
+            <table class="event-table">
+                <thead>
+                    <tr>
+                        <th>Event ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Organizers</th>
+                        <th>Source</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'event_detail' event.id %}" class="event-link">{{ event.id }}</a>
+                            {% if event.ext_data_src == 'gc' %}
+                            <span class="badge badge-gc">GC</span>
+                            {% elif event.ext_data_src %}
+                            <span class="badge">{{ event.ext_data_src|upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ event.date|date:"M j, Y" }}</td>
+                        <td>{{ event.time_of_day }}</td>
+                        <td class="organizers">
+                            {% if event.organizers.all %}
+                                {% for org in event.organizers.all %}
+                                <span class="organizer-tag">{{ org.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: #999; font-style: italic;">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if event.ext_data_src == 'gc' %}
+                            Web
+                            {% elif event.ext_data_src %}
+                            {{ event.ext_data_src|upper }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'event_detail' event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.8em;">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <span class="current">{{ num }}</span>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <a href="?page={{ num }}">{{ num }}</a>
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
                 {% endif %}
-            {% endfor %}
 
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+                {% endif %}
+            </div>
+
+            <p style="text-align: center; color: #666;">
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
+            </p>
+            {% endif %}
+
+            {% else %}
+            <div class="no-events">
+                <h3>No Events Found</h3>
+                <p>There are no events recorded at {{ location.name|title }} yet.</p>
+                <a href="{% url 'event_create' %}" class="btn">Create First Event</a>
+            </div>
             {% endif %}
         </div>
-
-        <p style="text-align: center; color: #666;">
-            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
-        </p>
-        {% endif %}
-
-        {% else %}
-        <div class="no-events">
-            <h3>No Events Found</h3>
-            <p>There are no events recorded at {{ location.name|title }} yet.</p>
-            <a href="{% url 'event_create' %}" class="btn">Create First Event</a>
-        </div>
-        {% endif %}
     </div>
 </body>
 </html>
