@@ -1,0 +1,381 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Event - ZenChanger</title>
+    <style>
+        .event-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-container {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .messages {
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .required {
+            color: red;
+        }
+        .auto-field {
+            font-size: 0.8em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .search-result {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result:hover {
+            background: #f0f0f0;
+        }
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .selected-item {
+            background: #e6f3ff;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .remove-item {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        <div class="nav-links">
+            <a href="{% url 'event_list' %}">← Back to Events</a>
+            <a href="{% url 'home' %}">Home</a>
+        </div>
+
+        <h2>Create New Event</h2>
+
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="post" id="event-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Event ID</label>
+                    <div class="auto-field">{{ preview_event_id }} (auto-generated)</div>
+                    <div class="help-text">Automatically generated when event is created</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Date <span class="required">*</span></label>
+                        <input type="date" id="date" name="date" required 
+                               value="{{ request.POST.date|default:today }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="time_of_day">Time <span class="required">*</span></label>
+                        <select id="time_of_day" name="time_of_day" required>
+                            <option value="">-- Select Time --</option>
+                            {% for hour in "012345678901234567890123"|make_list %}
+                                {% if forloop.counter0 < 24 %}
+                                    <option value="{{ forloop.counter0|stringformat:'02d' }}:00" 
+                                            {% if request.POST.time_of_day == forloop.counter0|stringformat:'02d'|add:':00' or forloop.counter0 == 12 and not request.POST.time_of_day %}selected{% endif %}>
+                                        {{ forloop.counter0|stringformat:'02d' }}:00
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location-search">Location <span class="required">*</span></label>
+                    <div class="search-container">
+                        <input type="text" id="location-search" placeholder="Start typing location name..." autocomplete="off">
+                        <div id="location-results" class="search-results"></div>
+                        <input type="hidden" id="location" name="location" required>
+                    </div>
+                    <div id="selected-location" class="help-text"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
+                    <div id="selected-country" class="auto-field">Will be set automatically when location is selected</div>
+                    <div class="help-text">Automatically determined from selected location</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="organizer-search">Organizers</label>
+                    <div class="search-container">
+                        <input type="text" id="organizer-search" placeholder="Start typing organization name..." autocomplete="off">
+                        <div id="organizer-results" class="search-results"></div>
+                    </div>
+                    <div id="selected-organizers" class="selected-items"></div>
+                    <div class="help-text">Type to search and select organizations</div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn">Create Event</button>
+                    <a href="{% url 'event_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Location search functionality
+        let locationSearchTimeout;
+        const locationSearch = document.getElementById('location-search');
+        const locationResults = document.getElementById('location-results');
+        const locationInput = document.getElementById('location');
+        const selectedLocation = document.getElementById('selected-location');
+        const selectedCountry = document.getElementById('selected-country');
+
+        locationSearch.addEventListener('input', function() {
+            clearTimeout(locationSearchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                locationResults.style.display = 'none';
+                return;
+            }
+            
+            locationSearchTimeout = setTimeout(() => {
+                searchLocations(query);
+            }, 300);
+        });
+
+        async function searchLocations(query) {
+            try {
+                const response = await fetch(`/api/search-locations/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                locationResults.innerHTML = '';
+                
+                if (data.locations.length > 0) {
+                    data.locations.forEach(location => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result';
+                        div.textContent = location.display;
+                        div.addEventListener('click', () => selectLocation(location));
+                        locationResults.appendChild(div);
+                    });
+                    locationResults.style.display = 'block';
+                } else {
+                    locationResults.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error searching locations:', error);
+            }
+        }
+
+        function selectLocation(location) {
+            locationSearch.value = location.display;
+            locationInput.value = location.id;
+            selectedLocation.textContent = `Selected: ${location.display}`;
+            selectedCountry.textContent = location.country;
+            locationResults.style.display = 'none';
+        }
+
+        // Organizer search functionality
+        let organizerSearchTimeout;
+        const organizerSearch = document.getElementById('organizer-search');
+        const organizerResults = document.getElementById('organizer-results');
+        const selectedOrganizers = document.getElementById('selected-organizers');
+        let selectedOrganizerIds = [];
+
+        organizerSearch.addEventListener('input', function() {
+            clearTimeout(organizerSearchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                organizerResults.style.display = 'none';
+                return;
+            }
+            
+            organizerSearchTimeout = setTimeout(() => {
+                searchOrganizers(query);
+            }, 300);
+        });
+
+        async function searchOrganizers(query) {
+            try {
+                const response = await fetch(`/api/search-organizations/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                organizerResults.innerHTML = '';
+                
+                if (data.organizations.length > 0) {
+                    data.organizations.forEach(org => {
+                        if (!selectedOrganizerIds.includes(org.id)) {
+                            const div = document.createElement('div');
+                            div.className = 'search-result';
+                            div.textContent = org.name;
+                            div.addEventListener('click', () => addOrganizer(org));
+                            organizerResults.appendChild(div);
+                        }
+                    });
+                    organizerResults.style.display = 'block';
+                } else {
+                    organizerResults.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error searching organizations:', error);
+            }
+        }
+
+        function addOrganizer(org) {
+            if (selectedOrganizerIds.includes(org.id)) return;
+            
+            selectedOrganizerIds.push(org.id);
+            
+            const div = document.createElement('div');
+            div.className = 'selected-item';
+            div.innerHTML = `
+                ${org.name}
+                <button type="button" class="remove-item" onclick="removeOrganizer(${org.id}, this.parentElement)">×</button>
+                <input type="hidden" name="organizers" value="${org.id}">
+            `;
+            
+            selectedOrganizers.appendChild(div);
+            organizerSearch.value = '';
+            organizerResults.style.display = 'none';
+        }
+
+        function removeOrganizer(orgId, element) {
+            selectedOrganizerIds = selectedOrganizerIds.filter(id => id !== orgId);
+            element.remove();
+        }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                locationResults.style.display = 'none';
+                organizerResults.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

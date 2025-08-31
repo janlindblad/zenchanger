@@ -1,0 +1,279 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Event {{ event.id }} - ZenChanger</title>
+    <style>
+        .event-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .delete-container {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 4em;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+        .event-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .event-detail {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .event-detail strong {
+            color: #333;
+            min-width: 100px;
+        }
+        .event-detail span {
+            color: #666;
+            flex: 1;
+            text-align: right;
+        }
+        .organizers-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+        .organizer-tag {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            border: 1px solid #b3d9ff;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .warning-text {
+            color: #856404;
+            font-size: 1.1em;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        .danger-text {
+            color: #721c24;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .form-actions {
+            margin-top: 30px;
+        }
+        .badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-gc {
+            background: #28a745;
+        }
+        .messages {
+            margin: 15px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        <div class="nav-links">
+            <a href="{% url 'event_detail' event.id %}">← Back to Event</a>
+            <a href="{% url 'event_list' %}">All Events</a>
+            <a href="{% url 'home' %}">Home</a>
+        </div>
+
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="delete-container">
+            <div class="warning-icon">⚠️</div>
+            
+            <h2 style="color: #856404; margin-bottom: 20px;">Delete Event</h2>
+            
+            <div class="warning-text">
+                You are about to permanently delete this event. This action cannot be undone.
+            </div>
+
+            <!-- Event Information -->
+            <div class="event-info">
+                <h3 style="margin-top: 0; color: #333;">
+                    Event: {{ event.id }}
+                    {% if event.ext_data_src == 'gc' %}
+                    <span class="badge badge-gc">Web Created</span>
+                    {% elif event.ext_data_src %}
+                    <span class="badge">{{ event.ext_data_src|upper }}</span>
+                    {% endif %}
+                </h3>
+                
+                <div class="event-detail">
+                    <strong>Date:</strong>
+                    <span>{{ event.date|date:"l, F j, Y" }}</span>
+                </div>
+                
+                <div class="event-detail">
+                    <strong>Time:</strong>
+                    <span>{{ event.time_of_day }}</span>
+                </div>
+                
+                <div class="event-detail">
+                    <strong>Country:</strong>
+                    <span>{{ event.country.name|title }}</span>
+                </div>
+                
+                <div class="event-detail">
+                    <strong>Location:</strong>
+                    <span>
+                        {% if event.location %}
+                        {{ event.location.name|title }}
+                        {% else %}
+                        <em>No specific location</em>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="event-detail">
+                    <strong>Organizers:</strong>
+                    <span>
+                        {% if event.organizers.all %}
+                        <div class="organizers-list">
+                            {% for organizer in event.organizers.all %}
+                            <span class="organizer-tag">{{ organizer.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <em>No organizers</em>
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="event-detail">
+                    <strong>Created:</strong>
+                    <span>{{ event.date_created|date:"M j, Y \a\t g:i A" }}</span>
+                </div>
+                
+                {% if event.date_modified != event.date_created %}
+                <div class="event-detail">
+                    <strong>Modified:</strong>
+                    <span>{{ event.date_modified|date:"M j, Y \a\t g:i A" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="danger-text">
+                Are you sure you want to delete this event?
+            </div>
+
+            <form method="post" class="form-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    🗑️ Yes, Delete Event
+                </button>
+                <a href="{% url 'event_detail' event.id %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </form>
+
+            <div style="margin-top: 20px; font-size: 0.9em; color: #666;">
+                <strong>Note:</strong> If this event has historical records, they may be preserved 
+                depending on your system configuration.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add confirmation dialog for extra safety
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const confirmed = confirm(
+                'Are you absolutely sure you want to delete event "{{ event.id }}"?\n\n' +
+                'This action is permanent and cannot be undone.'
+            );
+            
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+
+        // Add keyboard shortcut to cancel (Escape key)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.location.href = "{% url 'event_detail' event.id %}";
+            }
+        });
+    </script>
+</body>
+</html>

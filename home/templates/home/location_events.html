@@ -1,0 +1,260 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Events at {{ location.name|title }} - ZenChanger</title>
+    <style>
+        .event-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .location-header {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 30px;
+        }
+        .location-name {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d662d;
+            margin-bottom: 10px;
+        }
+        .location-meta {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        .event-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .event-table th, .event-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .event-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .event-table tr:hover {
+            background: #f5f5f5;
+        }
+        .event-table tr:last-child td {
+            border-bottom: none;
+        }
+        .event-link {
+            color: #2d662d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .event-link:hover {
+            text-decoration: underline;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 2px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .pagination {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .pagination a, .pagination span {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .pagination .current {
+            background: #2d662d;
+            color: white;
+            border-color: #2d662d;
+        }
+        .pagination a:hover {
+            background: #f8f9fa;
+        }
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .organizers {
+            font-size: 0.9em;
+        }
+        .organizer-tag {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin: 1px;
+            display: inline-block;
+        }
+        .badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .badge-gc {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        <div class="nav-links">
+            <a href="{% url 'event_list' %}">← Back to All Events</a>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'event_create' %}">Create New Event</a>
+        </div>
+
+        <!-- Location Header -->
+        <div class="location-header">
+            <div class="location-name">{{ location.name|title }}</div>
+            <div class="location-meta">
+                {{ location.in_country.name|title }}
+                {% if page_obj %}
+                • {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        {% if page_obj.object_list %}
+        <table class="event-table">
+            <thead>
+                <tr>
+                    <th>Event ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Organizers</th>
+                    <th>Source</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in page_obj %}
+                <tr>
+                    <td>
+                        <a href="{% url 'event_detail' event.id %}" class="event-link">{{ event.id }}</a>
+                        {% if event.ext_data_src == 'gc' %}
+                        <span class="badge badge-gc">GC</span>
+                        {% elif event.ext_data_src %}
+                        <span class="badge">{{ event.ext_data_src|upper }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ event.date|date:"M j, Y" }}</td>
+                    <td>{{ event.time_of_day }}</td>
+                    <td class="organizers">
+                        {% if event.organizers.all %}
+                            {% for org in event.organizers.all %}
+                            <span class="organizer-tag">{{ org.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="color: #999; font-style: italic;">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if event.ext_data_src == 'gc' %}
+                        Web
+                        {% elif event.ext_data_src %}
+                        {{ event.ext_data_src|upper }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'event_detail' event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.8em;">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+            {% endif %}
+        </div>
+
+        <p style="text-align: center; color: #666;">
+            Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
+        </p>
+        {% endif %}
+
+        {% else %}
+        <div class="no-events">
+            <h3>No Events Found</h3>
+            <p>There are no events recorded at {{ location.name|title }} yet.</p>
+            <a href="{% url 'event_create' %}" class="btn">Create First Event</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
