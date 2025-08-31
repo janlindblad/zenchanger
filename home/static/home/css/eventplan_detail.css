@@ -1,0 +1,173 @@
+.upcoming-dates-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+}
+
+.upcoming-dates-description {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.upcoming-dates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.date-card {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.date-card.available {
+    background: #f8f9fa;
+}
+
+.date-card.available:hover {
+    background: #e6f3ff;
+    border-color: #007bff;
+    transform: translateY(-2px);
+}
+
+.date-card.scheduled {
+    background: #e6ffe6;
+    border-color: #b3ffb3;
+}
+
+.date-card.cancelled {
+    background: #ffe6e6;
+    border-color: #ffb3b3;
+}
+
+.date-display {
+    display: block;
+    font-size: 1.1em;
+}
+
+.date-card.available .date-display { color: #007bff; }
+.date-card.scheduled .date-display { color: #006600; }
+.date-card.cancelled .date-display { color: #cc0000; }
+
+.day-display {
+    color: #666;
+    display: block;
+    margin-top: 5px;
+}
+
+.time-display {
+    display: block;
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+.date-card.available .time-display { color: #007bff; }
+.date-card.scheduled .time-display { color: #006600; }
+.date-card.cancelled .time-display { color: #cc0000; }
+
+.status-badge {
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    display: inline-block;
+    color: white;
+}
+
+.scheduled-badge { background: #006600; }
+.cancelled-badge { background: #cc0000; }
+
+.action-buttons {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.inline-form { display: inline; }
+
+/* Use higher specificity to override base template .btn styles */
+.date-card .btn-action {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    min-width: 120px;
+    text-align: center;
+    transition: background 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin: 2px; /* Reduce margin from base template */
+}
+
+/* Override the base template button colors with higher specificity */
+.date-card .btn.btn-action {
+    background: #007bff;
+    color: white;
+}
+
+.date-card .btn.btn-action:hover {
+    background: #0056b3;
+    color: white;
+    text-decoration: none;
+}
+
+.date-card .btn-danger.btn-action {
+    background: #dc3545;
+    color: white;
+}
+
+.date-card .btn-danger.btn-action:hover {
+    background: #c82333;
+}
+
+.date-card .btn-secondary.btn-action {
+    background: #6c757d;
+    color: white;
+}
+
+.date-card .btn-secondary.btn-action:hover {
+    background: #545b62;
+}
+
+.date-card .btn-success.btn-action {
+    background: #28a745;
+    color: white;
+}
+
+.date-card .btn-success.btn-action:hover {
+    background: #218838;
+}
+
+.legend {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e6f3ff;
+    border-radius: 4px;
+    border: 1px solid #b3d9ff;
+}
+
+.legend small { color: #0066cc; }
+.legend-scheduled { color: #006600; }
+.legend-cancelled { color: #cc0000; }
+.legend-available { color: #007bff; }
+
+/* Additional styles for the event plan container */
+.event-plan-container {
+    max-width: 1200px;
+}
+
+.event-detail-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+}

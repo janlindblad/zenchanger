@@ -45,6 +45,20 @@
             <div class="help-text">Estimated number of participants (optional)</div>
         </div>
 
+        <div class="form-group">
+            <label for="time_of_day">Default Time</label>
+            <select id="time_of_day" name="time_of_day">
+                <option value="">-- Select Time --</option>
+                {% for time_value, time_display in time_options %}
+                <option value="{{ time_value }}" 
+                        {% if request.POST.time_of_day == time_value %}selected{% endif %}>
+                    {{ time_display }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="help-text">Default time for events created from this plan (optional)</div>
+        </div>
+
         <!-- Location Field (same structure as event forms) -->
         <div class="form-group">
             <label for="location-search">Location <span class="required">*</span></label>
@@ -100,13 +114,13 @@
             <div class="form-group">
                 <label for="recur_from">Start Date</label>
                 <input type="date" id="recur_from" name="recur_from" 
-                       value="{{ request.POST.recur_from|default:today }}">
+                       value="{{ form_defaults.recur_from }}">
                 <div class="help-text">When recurring events start</div>
             </div>
             <div class="form-group">
                 <label for="recur_until">End Date</label>
                 <input type="date" id="recur_until" name="recur_until" 
-                       value="{{ request.POST.recur_until|default:month_later }}">
+                       value="{{ form_defaults.recur_until }}">
                 <div class="help-text">When recurring events end (optional, defaults to 1 month)</div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
@@ -111,6 +112,7 @@ class EventPlan(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     expected_participants = models.PositiveIntegerField(null=True, blank=True)
+    time_of_day = models.CharField(max_length=5)
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='event_plans')
     country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='event_plans')
     organizers = models.ManyToManyField(Organization, related_name='event_plans')
@@ -141,7 +143,7 @@ class EventPlan(models.Model):
         help_text="End date for recurring events"
     )
     
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_plans')
+    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='event_plans')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
@@ -247,6 +249,7 @@ class EventPlan(models.Model):
 
 class Event(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
+    cancelled = models.BooleanField(default=False)
     ext_data_src = models.CharField(max_length=255, null=True, blank=True)
     plan = models.ForeignKey(EventPlan, null=True, blank=True, on_delete=models.SET_NULL, related_name='events')
     date = models.DateField()
@@ -254,7 +257,12 @@ class Event(models.Model):
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL, related_name='events')
     time_of_day = models.CharField(max_length=5)
     organizers = models.ManyToManyField(Organization, related_name='events')
+    created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='events_created')
     history = HistoricalRecords()
+
+    @staticmethod
+    def get_unique_id(prefix):
+        return f"{prefix}:{uuid.uuid4().hex[:8]}"
 
     def __str__(self):
         loc = f", {self.location}" if self.location else ""

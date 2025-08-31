@@ -1,6 +1,12 @@
 {% extends "home/event_base.html" %}
 
+{% load static %}
+
 {% block title %}Event Plan: {{ event_plan.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'home/css/eventplan_detail.css' %}">
+{% endblock %}
 
 {% block nav_links %}
 <a href="{% url 'event_list' %}">← Back to Events</a>
@@ -15,93 +21,160 @@
 <h2>Event Plan: {{ event_plan.name }}</h2>
 {% endblock %}
 
-{% block content %}
-<div style="background: #f0f8ff; padding: 20px; border-radius: 8px; border: 1px solid #b3d9ff; margin-bottom: 20px;">
-    {% if event_plan.description %}
-    <div class="event-detail">
-        <strong>Description:</strong>
-        <span>{{ event_plan.description }}</span>
-    </div>
-    {% endif %}
-    
-    <div class="event-detail">
-        <strong>Location:</strong>
-        <span>
-            {% if event_plan.location %}
-                <a href="{% url 'location_events' event_plan.location.id %}">{{ event_plan.location.full_name }}</a>
-            {% else %}
-                Not specified
-            {% endif %}
-        </span>
-    </div>
-    
-    <div class="event-detail">
-        <strong>Expected Participants:</strong>
-        <span>{{ event_plan.expected_participants|default:"Not specified" }}</span>
-    </div>
-    
-    <div class="event-detail">
-        <strong>Recurrence:</strong>
-        <span>
-            {% if event_plan.recurrence %}
-                {{ event_plan.get_recurrence_display }}
-                {% if event_plan.weekday %}
-                    on {{ event_plan.get_weekday_display }}s
-                {% endif %}
-            {% else %}
-                No recurrence pattern
-            {% endif %}
-        </span>
-    </div>
-    
-    {% if event_plan.recur_from or event_plan.recur_until %}
-    <div class="event-detail">
-        <strong>Active Period:</strong>
-        <span>
-            {% if event_plan.recur_from %}
-                {{ event_plan.recur_from|date:"M j, Y" }}
-                {% if event_plan.recur_until %}
-                    → {{ event_plan.recur_until|date:"M j, Y" }}
-                {% else %}
-                    → ongoing
-                {% endif %}
-            {% elif event_plan.recur_until %}
-                Until {{ event_plan.recur_until|date:"M j, Y" }}
-            {% endif %}
-        </span>
-    </div>
-    {% endif %}
-    
-    <div class="event-detail">
-        <strong>Organizers:</strong>
-        <span>
-            {% for org in event_plan.organizers.all %}
-                {{ org.name }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-                None specified
-            {% endfor %}
-        </span>
-    </div>
-    
-    <div class="event-detail">
-        <strong>Created by:</strong>
-        <span>{{ event_plan.created_by.username }} on {{ event_plan.created_at|date:"M j, Y" }}</span>
-    </div>
-</div>
 
-{% if upcoming_dates %}
-<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-    <h3>Upcoming Event Dates</h3>
-    <p style="color: #666; margin-bottom: 15px;">Next 10 occurrences based on recurrence pattern:</p>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-        {% for upcoming_date in upcoming_dates %}
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: center;">
-            <strong>{{ upcoming_date|date:"M j, Y" }}</strong><br>
-            <small style="color: #666;">{{ upcoming_date|date:"l" }}</small>
+{% block content %}
+<div class="event-plan-container">
+    <div class="event-detail-box">
+        {% if event_plan.description %}
+        <div class="event-detail">
+            <strong>Description:</strong>
+            <span>{{ event_plan.description }}</span>
         </div>
-        {% endfor %}
+        {% endif %}
+        
+        <div class="event-detail">
+            <strong>Location:</strong>
+            <span>
+                {% if event_plan.location %}
+                    <a href="{% url 'location_events' event_plan.location.id %}">{{ event_plan.location.full_name }}</a>
+                {% else %}
+                    Not specified
+                {% endif %}
+            </span>
+        </div>
+        
+        <div class="event-detail">
+            <strong>Expected Participants:</strong>
+            <span>{{ event_plan.expected_participants|default:"Not specified" }}</span>
+        </div>
+        
+        <div class="event-detail">
+            <strong>Recurrence:</strong>
+            <span>
+                {% if event_plan.recurrence %}
+                    {{ event_plan.get_recurrence_display }}
+                    {% if event_plan.weekday %}
+                        on {{ event_plan.get_weekday_display }}s
+                    {% endif %}
+                {% else %}
+                    No recurrence pattern
+                {% endif %}
+            </span>
+        </div>
+        
+        {% if event_plan.recur_from or event_plan.recur_until %}
+        <div class="event-detail">
+            <strong>Active Period:</strong>
+            <span>
+                {% if event_plan.recur_from %}
+                    {{ event_plan.recur_from|date:"M j, Y" }}
+                    {% if event_plan.recur_until %}
+                        → {{ event_plan.recur_until|date:"M j, Y" }}
+                    {% else %}
+                        → ongoing
+                    {% endif %}
+                {% elif event_plan.recur_until %}
+                    Until {{ event_plan.recur_until|date:"M j, Y" }}
+                {% endif %}
+            </span>
+        </div>
+        {% endif %}
+        
+        <div class="event-detail">
+            <strong>Organizers:</strong>
+            <span>
+                {% for org in event_plan.organizers.all %}
+                    {{ org.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    None specified
+                {% endfor %}
+            </span>
+        </div>
+        
+        <div class="event-detail">
+            <strong>Created by:</strong>
+            <span>{{ event_plan.created_by.username }} on {{ event_plan.created_at|date:"M j, Y" }}</span>
+        </div>
     </div>
+
+    <!-- Update the upcoming dates section -->
+
+    {% if upcoming_dates_with_status %}
+    <div class="upcoming-dates-section">
+        <h3>Upcoming Event Dates</h3>
+        <p class="upcoming-dates-description">
+            Next 10 occurrences based on recurrence pattern.
+        </p>
+        
+        <div class="upcoming-dates-grid">
+            {% for date_info in upcoming_dates_with_status %}
+            <div class="date-card {% if date_info.is_cancelled %}cancelled{% elif date_info.has_event %}scheduled{% else %}available{% endif %}">
+                
+                <strong class="date-display">{{ date_info.date|date:"M j, Y" }}</strong>
+                <small class="day-display">{{ date_info.date|date:"l" }}</small>
+                <small class="time-display">{{ event_plan.time_of_day }}</small>
+                
+                <!-- Status indicator -->
+                {% if date_info.is_cancelled %}
+                <div class="status-badge cancelled-badge">CANCELLED</div>
+                {% elif date_info.has_event %}
+                <div class="status-badge scheduled-badge">SCHEDULED</div>
+                {% endif %}
+                
+                <!-- Action buttons -->
+                <div class="action-buttons">
+                    {% if date_info.is_cancelled %}
+                        <!-- Uncancel button -->
+                        <form method="post" action="{% url 'uncancel_event' event_plan.id date_info.date|date:'Y-m-d' %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-action"
+                                    onclick="return confirm('Remove cancellation for {{ date_info.date|date:"M j, Y" }}?')">
+                                Remove Cancellation
+                            </button>
+                        </form>
+                    {% elif date_info.has_event %}
+                        <!-- Cancel existing event button -->
+                        <form method="post" action="{% url 'cancel_event' event_plan.id date_info.date|date:'Y-m-d' %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-action"
+                                    onclick="return confirm('Cancel event for {{ date_info.date|date:"M j, Y" }}?')">
+                                Cancel Event
+                            </button>
+                        </form>
+                        
+                        <!-- View event button -->
+                        <a href="{% url 'event_detail' date_info.existing_event.id %}" class="btn btn-primary btn-action">
+                            View Event
+                        </a>
+                    {% else %}
+                        <!-- Create event button -->
+                        <a href="{% url 'event_create' %}?plan={{ event_plan.id }}&date={{ date_info.date|date:'Y-m-d' }}" class="btn btn-primary btn-action">
+                            Create Event
+                        </a>
+                        
+                        <!-- Cancel (create cancelled event) button -->
+                        <form method="post" action="{% url 'cancel_event' event_plan.id date_info.date|date:'Y-m-d' %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary btn-action"
+                                    onclick="return confirm('Cancel event for {{ date_info.date|date:"M j, Y" }}?')">
+                                Cancel Event
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="legend">
+            <small>
+                <strong>💡 Legend:</strong> 
+                <span class="legend-scheduled">Green = Event scheduled</span> • 
+                <span class="legend-cancelled">Red = Event cancelled</span> • 
+                <span class="legend-available">Blue = Available date</span>
+            </small>
+        </div>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

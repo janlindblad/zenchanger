@@ -1,9 +1,13 @@
 {% load static %}
 {% include "core/base_header.html" %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{% block title %}Event{% endblock %} - ZenChanger</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Event Management{% endblock %}</title>
+    
+    <!-- Existing styles -->
     <style>
         .event-container {
             max-width: {% block container_width %}900px{% endblock %};
@@ -223,6 +227,9 @@
         
         {% block extra_styles %}{% endblock %}
     </style>
+    
+    <!-- Add this block for additional CSS files -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="event-container">

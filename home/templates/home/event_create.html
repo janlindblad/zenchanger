@@ -4,7 +4,9 @@
 {% block container_width %}800px{% endblock %}
 
 {% block nav_links %}
-{% if prefill_location %}
+{% if prefill_plan %}
+<a href="{% url 'eventplan_detail' prefill_plan.id %}">← Back to {{ prefill_plan.name }}</a>
+{% elif prefill_location %}
 <a href="{% url 'location_events' prefill_location.id %}">← Back to {{ prefill_location.name|title }}</a>
 {% endif %}
 <a href="{% url 'event_list' %}">← Back to Events</a>
@@ -14,8 +16,18 @@
 {% block heading %}
 <h2>Create New Event</h2>
 <div style="color: #666; font-size: 0.9em; margin-bottom: 20px;">
-    Event ID: {{ preview_event_id }} (will be auto-generated)
+    {% if prefill_plan %}
+        Creating event from plan: <strong>{{ prefill_plan.name }}</strong>
+    {% else %}
+        Event ID will be auto-generated
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block initial_organizer_ids %}
+{% if default_organizers %}
+{% for org in default_organizers %}{{ org.id }}{% if not forloop.last %},{% endif %}{% endfor %}
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -23,27 +35,50 @@
     <form method="post" id="event-form">
         {% csrf_token %}
         
+        <!-- Hidden field for plan ID -->
+        {% if prefill_plan %}
+        <input type="hidden" name="plan" value="{{ prefill_plan.id }}">
+        {% endif %}
+        
         <!-- Date and Time Fields -->
         <div class="form-row">
             <div class="form-group">
                 <label for="date">Date <span class="required">*</span></label>
-                <input type="date" id="date" name="date" required value="{{ request.POST.date|default:today }}">
+                <input type="date" id="date" name="date" required value="{{ default_date_value }}">
+                {% if prefill_date_display %}
+                <div class="help-text"><strong>From plan schedule:</strong> {{ prefill_date_display }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="time_of_day">Time <span class="required">*</span></label>
                 <select id="time_of_day" name="time_of_day" required>
                     <option value="">-- Select Time --</option>
-                    {% for hour in "012345678901234567890123"|make_list %}
-                        {% if forloop.counter0 < 24 %}
-                            <option value="{{ forloop.counter0|stringformat:'02d' }}:00" 
-                                    {% if request.POST.time_of_day == forloop.counter0|stringformat:'02d'|add:':00' or forloop.counter0 == 12 and not request.POST.time_of_day %}selected{% endif %}>
-                                {{ forloop.counter0|stringformat:'02d' }}:00
-                            </option>
-                        {% endif %}
+                    {% for time_value, time_display in time_options %}
+                    <option value="{{ time_value }}" 
+                            {% if default_time == time_value %}selected{% endif %}>
+                        {{ time_display }}
+                    </option>
                     {% endfor %}
                 </select>
+                {% if default_time %}
+                <div class="help-text"><strong>From plan:</strong> {{ default_time }}</div>
+                {% endif %}
             </div>
         </div>
+
+        <!-- Expected Participants Field -->
+        {% if prefill_plan %}
+        <div class="form-group">
+            <label for="expected_participants">Expected Participants</label>
+            <input type="number" id="expected_participants" name="expected_participants" 
+                   value="{{ default_expected_participants_value }}" min="1">
+            {% if default_expected_participants %}
+            <div class="help-text"><strong>From plan:</strong> {{ default_expected_participants }} participants</div>
+            {% else %}
+            <div class="help-text">Estimated number of participants (optional)</div>
+            {% endif %}
+        </div>
+        {% endif %}
 
         <!-- Location Field -->
         <div class="form-group">
@@ -60,7 +95,7 @@
             </div>
             <div id="selected-location" class="help-text">
                 {% if prefill_location %}
-                    <strong>Pre-selected:</strong> {{ prefill_location.full_name }}
+                    <strong>{% if prefill_plan %}From plan{% else %}Pre-selected{% endif %}:</strong> {{ prefill_location.full_name }}
                 {% else %}
                     Country will be determined from selected location
                 {% endif %}
@@ -74,13 +109,31 @@
                 <input type="text" id="organizer-search" placeholder="Start typing organization name..." autocomplete="off">
                 <div id="organizer-results" class="search-results"></div>
             </div>
-            <div id="selected-organizers" class="selected-items"></div>
-            <div class="help-text">Type to search and select organizations (optional)</div>
+            <div id="selected-organizers" class="selected-items">
+                {% for org in default_organizers %}
+                <div class="selected-item">
+                    {{ org.name }}
+                    <button type="button" class="remove-item" onclick="removeOrganizer({{ org.id }}, this.parentElement)">×</button>
+                    <input type="hidden" name="organizers" value="{{ org.id }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="help-text">
+                {% if default_organizers %}
+                    <strong>From plan:</strong> Pre-selected organizers. You can add/remove as needed.
+                {% else %}
+                    Type to search and select organizations (optional)
+                {% endif %}
+            </div>
         </div>
 
         <div style="margin-top: 30px;">
             <button type="submit" class="btn">Create Event</button>
+            {% if prefill_plan %}
+            <a href="{% url 'eventplan_detail' prefill_plan.id %}" class="btn btn-secondary">Cancel</a>
+            {% else %}
             <a href="{% url 'event_list' %}" class="btn btn-secondary">Cancel</a>
+            {% endif %}
         </div>
     </form>
 </div>

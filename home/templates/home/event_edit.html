@@ -29,20 +29,18 @@
         <div class="form-row">
             <div class="form-group">
                 <label for="date">Date <span class="required">*</span></label>
-                <input type="date" id="date" name="date" required value="{{ event.date|date:'Y-m-d' }}">
+                <input type="date" id="date" name="date" required value="{{ form_defaults.date }}">
                 <div class="help-text">Current: {{ event.date|date:"l, F j, Y" }}</div>
             </div>
             <div class="form-group">
                 <label for="time_of_day">Time <span class="required">*</span></label>
                 <select id="time_of_day" name="time_of_day" required>
                     <option value="">-- Select Time --</option>
-                    {% for hour in "012345678901234567890123"|make_list %}
-                        {% if forloop.counter0 < 24 %}
-                            <option value="{{ forloop.counter0|stringformat:'02d' }}:00" 
-                                    {% if event.time_of_day == forloop.counter0|stringformat:'02d'|add:':00' %}selected{% endif %}>
-                                {{ forloop.counter0|stringformat:'02d' }}:00
-                            </option>
-                        {% endif %}
+                    {% for time_value, time_display in time_options %}
+                    <option value="{{ time_value }}" 
+                            {% if form_defaults.time_of_day == time_value %}selected{% endif %}>
+                        {{ time_display }}
+                    </option>
                     {% endfor %}
                 </select>
                 <div class="help-text">Current: {{ event.time_of_day }}</div>

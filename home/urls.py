@@ -9,7 +9,8 @@ from .event_views import (
     event_list_view, event_create_view, event_detail_view, 
     event_edit_view, event_delete_view, location_events_view,
     get_locations_by_country, search_locations, search_organizations,
-    eventplan_create_view, eventplan_detail_view, eventplan_edit_view, eventplan_delete_view
+    eventplan_create_view, eventplan_detail_view, eventplan_edit_view, eventplan_delete_view,
+    cancel_event_view, uncancel_event_view
 )
 from .location_views import location_create_view, location_search_popup, location_quick_create
 
@@ -46,4 +47,6 @@ urlpatterns = [
     path('eventplans/<int:plan_id>/', eventplan_detail_view, name='eventplan_detail'),
     path('eventplans/<int:plan_id>/edit/', eventplan_edit_view, name='eventplan_edit'),
     path('eventplans/<int:plan_id>/delete/', eventplan_delete_view, name='eventplan_delete'),
+    path('eventplans/<int:plan_id>/cancel/<str:date_str>/', cancel_event_view, name='cancel_event'),
+    path('eventplans/<int:plan_id>/uncancel/<str:date_str>/', uncancel_event_view, name='uncancel_event'),
 ]
