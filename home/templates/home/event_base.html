@@ -356,7 +356,9 @@
             function selectLocation(location) {
                 locationSearch.value = location.display;
                 locationInput.value = location.id;
-                selectedLocation.textContent = `Selected: ${location.display}`;
+                // Show full name if available, otherwise fall back to display
+                const displayName = location.full_name || location.display;
+                selectedLocation.innerHTML = `<strong>Selected:</strong> ${displayName}`;
                 selectedCountry.textContent = location.country;
                 locationResults.style.display = 'none';
             }
@@ -444,6 +446,42 @@
         // Initialize form functionality if form exists
         document.addEventListener('DOMContentLoaded', function() {
             if (document.getElementById('event-form')) {
+                initializeEventForm();
+            }
+        });
+
+        // form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const eventForm = document.getElementById('event-form');
+            if (eventForm) {
+                eventForm.addEventListener('submit', function(e) {
+                    const errors = [];
+                    
+                    // Validate date
+                    const dateField = document.getElementById('date');
+                    if (!dateField.value) {
+                        errors.push('Date is required');
+                    }
+                    
+                    // Validate time
+                    const timeField = document.getElementById('time_of_day');
+                    if (!timeField.value) {
+                        errors.push('Time is required');
+                    }
+                    
+                    // Validate location
+                    const locationField = document.getElementById('location');
+                    if (!locationField.value) {
+                        errors.push('Location is required');
+                    }
+                    
+                    if (errors.length > 0) {
+                        e.preventDefault();
+                        alert('Please fix the following errors:\n• ' + errors.join('\n• '));
+                        return false;
+                    }
+                });
+                
                 initializeEventForm();
             }
         });

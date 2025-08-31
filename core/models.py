@@ -40,6 +40,26 @@ class Location(models.Model):
         self.name = self.name.lower()
         super().save(*args, **kwargs)
 
+    def full_name(self):
+        """
+        Return the full hierarchical name of the location with country at the end.
+        Example: "Barkarby, Järfälla Kommun, Stockholms Län, Sweden"
+        """
+        # Build the location chain from most specific to least specific
+        location_chain = []
+        current_location = self
+        
+        # Traverse up the location hierarchy
+        while current_location:
+            location_chain.append(current_location.name.title())
+            current_location = current_location.in_location
+        
+        # Add country name at the end
+        location_chain.append(self.in_country.name.title())
+        
+        # Join with commas and return
+        return ', '.join(location_chain)
+
     def __str__(self):
         return f"{self.name.title()} ({self.in_country.code})"
 

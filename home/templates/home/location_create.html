@@ -207,10 +207,14 @@
                     
                     {% if result.location_chain %}
                     <div class="location-chain">
-                        <strong>Location chain:</strong> 
+                        <strong>Will create location chain:</strong> 
                         {% for loc in result.location_chain %}
                             {{ loc }}{% if not forloop.last %} → {% endif %}
                         {% endfor %}
+                    </div>
+                    <div class="location-chain" style="background: #f0f8ff; border: 1px solid #b3d9ff;">
+                        <strong>Full name will be:</strong> 
+                        {% for loc in result.location_chain %}{{ loc }}{% if not forloop.last %}, {% endif %}{% endfor %}, {{ result.country_name }}
                     </div>
                     {% endif %}
                     

@@ -164,9 +164,10 @@
         <div class="location-header">
             <div class="location-name">{{ location.name|title }}</div>
             <div class="location-meta">
-                {{ location.in_country.name|title }}
+                <strong>Full location:</strong> {{ location.full_name }}
+                <br>
                 {% if page_obj %}
-                • {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
+                {{ page_obj.paginator.count }} event{{ page_obj.paginator.count|pluralize }}
                 {% endif %}
             </div>
         </div>

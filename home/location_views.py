@@ -91,15 +91,18 @@ def process_location_creation(request, result_data, search_query):
             lon=result_data.get('lon', 0.0)
         )
         
+        # In process_location_creation function
         if created_locations:
-            messages.success(request, f'Successfully created location(s): {", ".join(created_locations)}')
-            
-            # Find the most specific location that was created
             final_location = Location.objects.filter(
                 name__iexact=location_chain[-1].lower(),
                 in_country=country
             ).first()
             
+            if final_location:
+                messages.success(request, f'Successfully created location: {final_location.full_name()}')
+            else:
+                messages.success(request, f'Successfully created location(s): {", ".join(created_locations)}')            
+
             # If we came from event creation/editing, return the location data
             if request.GET.get('return_json'):
                 return JsonResponse({
@@ -215,7 +218,8 @@ def location_quick_create(request):
                     'id': final_location.id,
                     'name': final_location.name.title(),
                     'country': country.name.title(),
-                    'display': f"{final_location.name.title()} ({country.name.title()})"
+                    'display': f"{final_location.name.title()} ({country.name.title()})",
+                    'full_name': final_location.full_name()  # Add this
                 }
             })
             
