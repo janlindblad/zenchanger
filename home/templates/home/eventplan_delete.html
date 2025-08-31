@@ -1,0 +1,48 @@
+{% extends "home/event_base.html" %}
+
+{% block title %}Delete Event Plan{% endblock %}
+
+{% block nav_links %}
+<a href="{% url 'eventplan_detail' event_plan.id %}">← Back to Plan</a>
+<a href="{% url 'event_list' %}">All Events</a>
+<a href="{% url 'home' %}">Home</a>
+{% endblock %}
+
+{% block heading %}
+<h2>Delete Event Plan</h2>
+{% endblock %}
+
+{% block content %}
+<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h3>⚠️ Confirm Deletion</h3>
+    <p>Are you sure you want to delete the event plan <strong>"{{ event_plan.name }}"</strong>?</p>
+    
+    {% if event_plan.description %}
+    <p><strong>Description:</strong> {{ event_plan.description }}</p>
+    {% endif %}
+    
+    <p><strong>Location:</strong> 
+        {% if event_plan.location %}
+            {{ event_plan.location.full_name }}
+        {% else %}
+            Not specified
+        {% endif %}
+    </p>
+    
+    {% if event_plan.recurrence %}
+    <p><strong>Recurrence:</strong> {{ event_plan.get_recurrence_display }}
+        {% if event_plan.weekday %} on {{ event_plan.get_weekday_display }}s{% endif %}
+    </p>
+    {% endif %}
+    
+    <p style="color: #856404; margin-top: 15px;">
+        <strong>Warning:</strong> This action cannot be undone. The event plan will be permanently deleted.
+    </p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete Event Plan</button>
+    <a href="{% url 'eventplan_detail' event_plan.id %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

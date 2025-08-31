@@ -1,0 +1,141 @@
+{% extends "home/event_base.html" %}
+
+{% block title %}Create Event Plan{% endblock %}
+{% block container_width %}800px{% endblock %}
+
+{% block nav_links %}
+<a href="{% url 'event_list' %}">← Back to Events</a>
+<a href="{% url 'home' %}">Home</a>
+{% endblock %}
+
+{% block heading %}
+<h2>Create New Event Plan</h2>
+<div style="color: #666; font-size: 0.9em; margin-bottom: 20px;">
+    Event plans are templates for recurring events or future planned events
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post" id="event-form">
+        {% csrf_token %}
+        
+        <!-- Basic Information -->
+        <div class="form-group">
+            <label for="name">Plan Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" required 
+                   value="{{ request.POST.name }}" placeholder="e.g., Weekly Meditation Group">
+            <div class="help-text">A descriptive name for this event plan</div>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" 
+                      placeholder="Optional description of the event plan">{{ request.POST.description }}</textarea>
+            <div class="help-text">Optional detailed description</div>
+        </div>
+
+        <div class="form-group">
+            <label for="expected_participants">Expected Participants</label>
+            <input type="number" id="expected_participants" name="expected_participants" 
+                   value="{{ request.POST.expected_participants }}" min="1">
+            <div class="help-text">Estimated number of participants (optional)</div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+            <label for="location-search">Location <span class="required">*</span></label>
+            <div class="search-container">
+                <input type="text" id="location-search" placeholder="Start typing location name..." autocomplete="off">
+                <div id="location-results" class="search-results"></div>
+                <input type="hidden" id="location" name="location" required>
+            </div>
+            <div id="selected-location" class="help-text">Country will be determined from selected location</div>
+        </div>
+
+        <!-- Recurrence Pattern -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="recurrence">Recurrence Pattern</label>
+                <select id="recurrence" name="recurrence">
+                    <option value="">No recurrence</option>
+                    {% for value, label in recurrence_choices %}
+                    <option value="{{ value }}" {% if request.POST.recurrence == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">How often this event occurs</div>
+            </div>
+            <div class="form-group">
+                <label for="weekday">Weekday</label>
+                <select id="weekday" name="weekday">
+                    <option value="">Select weekday</option>
+                    {% for value, label in weekday_choices %}
+                    <option value="{{ value }}" {% if request.POST.weekday == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">Required for recurring events</div>
+            </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="recur_from">Start Date</label>
+                <input type="date" id="recur_from" name="recur_from" 
+                       value="{{ request.POST.recur_from|default:today }}">
+                <div class="help-text">When recurring events start</div>
+            </div>
+            <div class="form-group">
+                <label for="recur_until">End Date</label>
+                <input type="date" id="recur_until" name="recur_until" 
+                       value="{{ request.POST.recur_until }}">
+                <div class="help-text">When recurring events end (optional)</div>
+            </div>
+        </div>
+
+        <!-- Organizers -->
+        <div class="form-group">
+            <label for="organizer-search">Organizers</label>
+            <div class="search-container">
+                <input type="text" id="organizer-search" placeholder="Start typing organization name..." autocomplete="off">
+                <div id="organizer-results" class="search-results"></div>
+            </div>
+            <div id="selected-organizers" class="selected-items"></div>
+            <div class="help-text">Type to search and select organizations (optional)</div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn">Create Event Plan</button>
+            <a href="{% url 'event_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show/hide weekday field based on recurrence selection
+    document.getElementById('recurrence').addEventListener('change', function() {
+        const weekdayGroup = document.getElementById('weekday').closest('.form-group');
+        const weekdayField = document.getElementById('weekday');
+        
+        if (this.value && this.value !== 'irregular') {
+            weekdayGroup.style.display = 'block';
+            weekdayField.required = true;
+        } else {
+            weekdayGroup.style.display = 'none';
+            weekdayField.required = false;
+            weekdayField.value = '';
+        }
+    });
+
+    // Initialize the weekday field visibility
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('recurrence').dispatchEvent(new Event('change'));
+    });
+</script>
+{% endblock %}

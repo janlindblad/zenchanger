@@ -1,0 +1,153 @@
+{% extends "home/event_base.html" %}
+
+{% block title %}Edit Event Plan: {{ event_plan.name }}{% endblock %}
+{% block container_width %}800px{% endblock %}
+
+{% block nav_links %}
+<a href="{% url 'eventplan_detail' event_plan.id %}">← Back to Plan</a>
+<a href="{% url 'event_list' %}">All Events</a>
+<a href="{% url 'home' %}">Home</a>
+{% endblock %}
+
+{% block heading %}
+<h2>Edit Event Plan: {{ event_plan.name }}</h2>
+{% endblock %}
+
+{% block initial_organizer_ids %}
+{% for org in event_plan.organizers.all %}{{ org.id }}{% if not forloop.last %},{% endif %}{% endfor %}
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post" id="event-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Plan Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" required 
+                   value="{{ event_plan.name }}" placeholder="e.g., Weekly Meditation Group">
+            <div class="help-text">A descriptive name for this event plan</div>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" 
+                      placeholder="Optional description of the event plan">{{ event_plan.description }}</textarea>
+            <div class="help-text">Optional detailed description</div>
+        </div>
+
+        <div class="form-group">
+            <label for="expected_participants">Expected Participants</label>
+            <input type="number" id="expected_participants" name="expected_participants" 
+                   value="{{ event_plan.expected_participants }}" min="1">
+            <div class="help-text">Estimated number of participants (optional)</div>
+        </div>
+
+        <div class="form-group">
+            <label for="location-search">Location <span class="required">*</span></label>
+            <div class="search-container">
+                <input type="text" id="location-search" 
+                       value="{% if event_plan.location %}{{ event_plan.location.name|title }} ({{ event_plan.location.in_country.name|title }}){% endif %}"
+                       placeholder="Start typing location name..." autocomplete="off">
+                <div id="location-results" class="search-results"></div>
+                <input type="hidden" id="location" name="location" 
+                       value="{% if event_plan.location %}{{ event_plan.location.id }}{% endif %}" required>
+            </div>
+            <div id="selected-location" class="help-text">
+                {% if event_plan.location %}
+                    <strong>Current:</strong> {{ event_plan.location.full_name }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="recurrence">Recurrence Pattern</label>
+                <select id="recurrence" name="recurrence">
+                    <option value="">No recurrence</option>
+                    {% for value, label in recurrence_choices %}
+                    <option value="{{ value }}" {% if event_plan.recurrence == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">How often this event occurs</div>
+            </div>
+            <div class="form-group">
+                <label for="weekday">Weekday</label>
+                <select id="weekday" name="weekday">
+                    <option value="">Select weekday</option>
+                    {% for value, label in weekday_choices %}
+                    <option value="{{ value }}" {% if event_plan.weekday == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">Required for recurring events</div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="recur_from">Start Date</label>
+                <input type="date" id="recur_from" name="recur_from" 
+                       value="{{ event_plan.recur_from|date:'Y-m-d' }}">
+                <div class="help-text">When recurring events start</div>
+            </div>
+            <div class="form-group">
+                <label for="recur_until">End Date</label>
+                <input type="date" id="recur_until" name="recur_until" 
+                       value="{{ event_plan.recur_until|date:'Y-m-d' }}">
+                <div class="help-text">When recurring events end (optional)</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="organizer-search">Organizers</label>
+            <div class="search-container">
+                <input type="text" id="organizer-search" placeholder="Start typing organization name..." autocomplete="off">
+                <div id="organizer-results" class="search-results"></div>
+            </div>
+            <div id="selected-organizers" class="selected-items">
+                {% for org in event_plan.organizers.all %}
+                <div class="selected-item">
+                    {{ org.name }}
+                    <button type="button" class="remove-item" onclick="removeOrganizer({{ org.id }}, this.parentElement)">×</button>
+                    <input type="hidden" name="organizers" value="{{ org.id }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="help-text">Type to search and select organizations</div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn">Update Event Plan</button>
+            <a href="{% url 'eventplan_detail' event_plan.id %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show/hide weekday field based on recurrence selection
+    document.getElementById('recurrence').addEventListener('change', function() {
+        const weekdayGroup = document.getElementById('weekday').closest('.form-group');
+        const weekdayField = document.getElementById('weekday');
+        
+        if (this.value && this.value !== 'irregular') {
+            weekdayGroup.style.display = 'block';
+            weekdayField.required = true;
+        } else {
+            weekdayGroup.style.display = 'none';
+            weekdayField.required = false;
+            weekdayField.value = '';
+        }
+    });
+
+    // Initialize the weekday field visibility
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('recurrence').dispatchEvent(new Event('change'));
+    });
+</script>
+{% endblock %}

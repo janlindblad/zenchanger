@@ -246,233 +246,229 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Main JavaScript -->
     <script>
-        {% block base_scripts %}
-        // Common form JavaScript (only loads when needed)
-        function initializeEventForm() {
-            // Initialize selected organizers
-            let selectedOrganizerIds = [{% block initial_organizer_ids %}{% endblock %}];
+        // Initialize selected organizers - get initial values from template
+        let selectedOrganizerIds = [{% block initial_organizer_ids %}{% endblock %}];
 
-            // Location search functionality
-            let locationSearchTimeout;
-            const locationSearch = document.getElementById('location-search');
-            const locationResults = document.getElementById('location-results');
-            const locationInput = document.getElementById('location');
-            const selectedLocation = document.getElementById('selected-location');
-            const selectedCountry = document.getElementById('selected-country');
+        // Location search functionality
+        let locationSearchTimeout;
+        const locationSearch = document.getElementById('location-search');
+        const locationResults = document.getElementById('location-results');
+        const locationInput = document.getElementById('location');
+        const selectedLocation = document.getElementById('selected-location');
+        const selectedCountry = document.getElementById('selected-country');
 
-            if (locationSearch) {
-                locationSearch.addEventListener('input', function() {
-                    clearTimeout(locationSearchTimeout);
-                    const query = this.value.trim();
-                    
-                    if (query.length < 2) {
-                        locationResults.style.display = 'none';
-                        return;
-                    }
-                    
-                    locationSearchTimeout = setTimeout(() => {
-                        searchLocations(query);
-                    }, 300);
-                });
-            }
-
-            async function searchLocations(query) {
-                try {
-                    const response = await fetch(`/api/search-locations/?q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    
-                    locationResults.innerHTML = '';
-                    
-                    // Add "Create new location" option if no exact match
-                    const hasExactMatch = data.locations && data.locations.some(loc => 
-                        loc.name.toLowerCase() === query.toLowerCase()
-                    );
-                    
-                    if (!hasExactMatch && query.length >= 3) {
-                        const createDiv = document.createElement('div');
-                        createDiv.className = 'search-result create-new';
-                        createDiv.innerHTML = `🔍 Create new location: <strong>${query}</strong>`;
-                        createDiv.addEventListener('click', () => createNewLocation(query));
-                        locationResults.appendChild(createDiv);
-                    }
-                    
-                    // Add existing locations
-                    if (data.locations && data.locations.length > 0) {
-                        data.locations.forEach(location => {
-                            const div = document.createElement('div');
-                            div.className = 'search-result';
-                            div.textContent = location.display;
-                            div.addEventListener('click', () => selectLocation(location));
-                            locationResults.appendChild(div);
-                        });
-                    }
-                    
-                    if (locationResults.children.length > 0) {
-                        locationResults.style.display = 'block';
-                    } else {
-                        locationResults.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Error searching locations:', error);
-                }
-            }
-            
-            async function createNewLocation(query) {
-                locationResults.style.display = 'none';
+        if (locationSearch) {
+            locationSearch.addEventListener('input', function() {
+                clearTimeout(locationSearchTimeout);
+                const query = this.value.trim();
                 
-                try {
-                    const response = await fetch('/locations/quick-create/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        },
-                        body: `search_query=${encodeURIComponent(query)}`
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        selectLocation(data.location);
-                        alert(`Location "${data.location.name}" created successfully!`);
-                    } else if (data.multiple_results) {
-                        const url = `/locations/create/?q=${encodeURIComponent(query)}&return_to=event`;
-                        window.open(url, 'create_location', 'width=900,height=700,scrollbars=yes');
-                    } else {
-                        alert(`Error creating location: ${data.error}`);
-                    }
-                } catch (error) {
-                    console.error('Error creating location:', error);
-                    alert('Error creating location. Please try again.');
+                if (query.length < 2) {
+                    locationResults.style.display = 'none';
+                    return;
                 }
-            }
-            
-            window.handleLocationCreated = function(locationData) {
-                selectLocation(locationData);
-                alert(`Location "${locationData.name}" created successfully!`);
-            };
-
-            function selectLocation(location) {
-                locationSearch.value = location.display;
-                locationInput.value = location.id;
-                // Show full name if available, otherwise fall back to display
-                const displayName = location.full_name || location.display;
-                selectedLocation.innerHTML = `<strong>Selected:</strong> ${displayName}`;
-                selectedCountry.textContent = location.country;
-                locationResults.style.display = 'none';
-            }
-
-            // Organizer search functionality
-            let organizerSearchTimeout;
-            const organizerSearch = document.getElementById('organizer-search');
-            const organizerResults = document.getElementById('organizer-results');
-            const selectedOrganizers = document.getElementById('selected-organizers');
-
-            if (organizerSearch) {
-                organizerSearch.addEventListener('input', function() {
-                    clearTimeout(organizerSearchTimeout);
-                    const query = this.value.trim();
-                    
-                    if (query.length < 2) {
-                        organizerResults.style.display = 'none';
-                        return;
-                    }
-                    
-                    organizerSearchTimeout = setTimeout(() => {
-                        searchOrganizers(query);
-                    }, 300);
-                });
-            }
-
-            async function searchOrganizers(query) {
-                try {
-                    const response = await fetch(`/api/search-organizations/?q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    
-                    organizerResults.innerHTML = '';
-                    
-                    if (data.organizations.length > 0) {
-                        data.organizations.forEach(org => {
-                            if (!selectedOrganizerIds.includes(org.id)) {
-                                const div = document.createElement('div');
-                                div.className = 'search-result';
-                                div.textContent = org.name;
-                                div.addEventListener('click', () => addOrganizer(org));
-                                organizerResults.appendChild(div);
-                            }
-                        });
-                        organizerResults.style.display = 'block';
-                    } else {
-                        organizerResults.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Error searching organizations:', error);
-                }
-            }
-
-            function addOrganizer(org) {
-                if (selectedOrganizerIds.includes(org.id)) return;
                 
-                selectedOrganizerIds.push(org.id);
-                
-                const div = document.createElement('div');
-                div.className = 'selected-item';
-                div.innerHTML = `
-                    ${org.name}
-                    <button type="button" class="remove-item" onclick="removeOrganizer(${org.id}, this.parentElement)">×</button>
-                    <input type="hidden" name="organizers" value="${org.id}">
-                `;
-                
-                selectedOrganizers.appendChild(div);
-                organizerSearch.value = '';
-                organizerResults.style.display = 'none';
-            }
-
-            window.removeOrganizer = function(orgId, element) {
-                selectedOrganizerIds = selectedOrganizerIds.filter(id => id !== orgId);
-                element.remove();
-            };
-
-            // Hide search results when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.search-container')) {
-                    if (locationResults) locationResults.style.display = 'none';
-                    if (organizerResults) organizerResults.style.display = 'none';
-                }
+                locationSearchTimeout = setTimeout(() => {
+                    searchLocations(query);
+                }, 300);
             });
         }
 
-        // Initialize form functionality if form exists
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.getElementById('event-form')) {
-                initializeEventForm();
+        async function searchLocations(query) {
+            try {
+                const response = await fetch('/api/search-locations/?q=' + encodeURIComponent(query));
+                const data = await response.json();
+                
+                locationResults.innerHTML = '';
+                
+                // Add "Create new location" option if no exact match
+                const hasExactMatch = data.locations && data.locations.some(loc => 
+                    loc.name.toLowerCase() === query.toLowerCase()
+                );
+                
+                if (!hasExactMatch && query.length >= 3) {
+                    const createDiv = document.createElement('div');
+                    createDiv.className = 'search-result create-new';
+                    createDiv.innerHTML = '🔍 Create new location: <strong>' + query + '</strong>';
+                    createDiv.addEventListener('click', () => createNewLocation(query));
+                    locationResults.appendChild(createDiv);
+                }
+                
+                // Add existing locations
+                if (data.locations && data.locations.length > 0) {
+                    data.locations.forEach(location => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result';
+                        div.textContent = location.display;
+                        div.addEventListener('click', () => selectLocation(location));
+                        locationResults.appendChild(div);
+                    });
+                }
+                
+                if (locationResults.children.length > 0) {
+                    locationResults.style.display = 'block';
+                } else {
+                    locationResults.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error searching locations:', error);
+            }
+        }
+        
+        async function createNewLocation(query) {
+            locationResults.style.display = 'none';
+            
+            try {
+                const response = await fetch('/locations/quick-create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: 'search_query=' + encodeURIComponent(query)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    selectLocation(data.location);
+                    alert('Location "' + data.location.name + '" created successfully!');
+                } else if (data.multiple_results) {
+                    const url = '/locations/create/?q=' + encodeURIComponent(query) + '&return_to=event';
+                    window.open(url, 'create_location', 'width=900,height=700,scrollbars=yes');
+                } else {
+                    alert('Error creating location: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating location:', error);
+                alert('Error creating location. Please try again.');
+            }
+        }
+        
+        window.handleLocationCreated = function(locationData) {
+            selectLocation(locationData);
+            alert('Location "' + locationData.name + '" created successfully!');
+        };
+
+        function selectLocation(location) {
+            locationSearch.value = location.display;
+            locationInput.value = location.id;
+            const displayName = location.full_name || location.display;
+            selectedLocation.innerHTML = '<strong>Selected:</strong> ' + displayName;
+            if (selectedCountry) {
+                selectedCountry.textContent = location.country;
+            }
+            locationResults.style.display = 'none';
+        }
+
+        // Organizer search functionality
+        let organizerSearchTimeout;
+        const organizerSearch = document.getElementById('organizer-search');
+        const organizerResults = document.getElementById('organizer-results');
+        const selectedOrganizers = document.getElementById('selected-organizers');
+
+        if (organizerSearch) {
+            organizerSearch.addEventListener('input', function() {
+                clearTimeout(organizerSearchTimeout);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    organizerResults.style.display = 'none';
+                    return;
+                }
+                
+                organizerSearchTimeout = setTimeout(() => {
+                    searchOrganizers(query);
+                }, 300);
+            });
+        }
+
+        async function searchOrganizers(query) {
+            try {
+                const response = await fetch('/api/search-organizations/?q=' + encodeURIComponent(query));
+                const data = await response.json();
+                
+                organizerResults.innerHTML = '';
+                
+                if (data.organizations.length > 0) {
+                    data.organizations.forEach(org => {
+                        if (!selectedOrganizerIds.includes(org.id)) {
+                            const div = document.createElement('div');
+                            div.className = 'search-result';
+                            div.textContent = org.name;
+                            div.addEventListener('click', () => addOrganizer(org));
+                            organizerResults.appendChild(div);
+                        }
+                    });
+                    organizerResults.style.display = 'block';
+                } else {
+                    organizerResults.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error searching organizations:', error);
+            }
+        }
+
+        function addOrganizer(org) {
+            if (selectedOrganizerIds.includes(org.id)) return;
+            
+            selectedOrganizerIds.push(org.id);
+            
+            const div = document.createElement('div');
+            div.className = 'selected-item';
+            div.innerHTML = org.name + 
+                '<button type="button" class="remove-item" onclick="removeOrganizer(' + org.id + ', this.parentElement)">×</button>' +
+                '<input type="hidden" name="organizers" value="' + org.id + '">';
+            
+            selectedOrganizers.appendChild(div);
+            organizerSearch.value = '';
+            organizerResults.style.display = 'none';
+        }
+
+        window.removeOrganizer = function(orgId, element) {
+            selectedOrganizerIds = selectedOrganizerIds.filter(id => id !== orgId);
+            element.remove();
+        };
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                if (locationResults) locationResults.style.display = 'none';
+                if (organizerResults) organizerResults.style.display = 'none';
             }
         });
 
-        // form validation
+        // Initialize form functionality when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Add form validation if form exists
             const eventForm = document.getElementById('event-form');
             if (eventForm) {
                 eventForm.addEventListener('submit', function(e) {
                     const errors = [];
                     
-                    // Validate date
+                    // Validate date if it exists
                     const dateField = document.getElementById('date');
-                    if (!dateField.value) {
+                    if (dateField && !dateField.value) {
                         errors.push('Date is required');
                     }
                     
-                    // Validate time
+                    // Validate time if it exists
                     const timeField = document.getElementById('time_of_day');
-                    if (!timeField.value) {
+                    if (timeField && !timeField.value) {
                         errors.push('Time is required');
                     }
                     
                     // Validate location
                     const locationField = document.getElementById('location');
-                    if (!locationField.value) {
+                    if (locationField && !locationField.value) {
                         errors.push('Location is required');
+                    }
+                    
+                    // Validate name if it exists (for event plans)
+                    const nameField = document.getElementById('name');
+                    if (nameField && !nameField.value.trim()) {
+                        errors.push('Name is required');
                     }
                     
                     if (errors.length > 0) {
@@ -481,13 +477,11 @@
                         return false;
                     }
                 });
-                
-                initializeEventForm();
             }
         });
-        {% endblock %}
-
-        {% block scripts %}{% endblock %}
     </script>
+
+    <!-- Additional scripts from child templates -->
+    {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -8,7 +8,8 @@ from .secret_view import secret_view
 from .event_views import (
     event_list_view, event_create_view, event_detail_view, 
     event_edit_view, event_delete_view, location_events_view,
-    get_locations_by_country, search_locations, search_organizations
+    get_locations_by_country, search_locations, search_organizations,
+    eventplan_create_view, eventplan_detail_view, eventplan_edit_view, eventplan_delete_view
 )
 from .location_views import location_create_view, location_search_popup, location_quick_create
 
@@ -39,4 +40,10 @@ urlpatterns = [
     path('api/search-locations/', search_locations, name='search_locations'),
     path('api/search-organizations/', search_organizations, name='search_organizations'),
     path('api/location-search-popup/', location_search_popup, name='location_search_popup'),
+
+    # Event Plan URLs
+    path('eventplans/create/', eventplan_create_view, name='eventplan_create'),
+    path('eventplans/<int:plan_id>/', eventplan_detail_view, name='eventplan_detail'),
+    path('eventplans/<int:plan_id>/edit/', eventplan_edit_view, name='eventplan_edit'),
+    path('eventplans/<int:plan_id>/delete/', eventplan_delete_view, name='eventplan_delete'),
 ]

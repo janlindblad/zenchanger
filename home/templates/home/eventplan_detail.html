@@ -1,0 +1,107 @@
+{% extends "home/event_base.html" %}
+
+{% block title %}Event Plan: {{ event_plan.name }}{% endblock %}
+
+{% block nav_links %}
+<a href="{% url 'event_list' %}">← Back to Events</a>
+{% if can_edit %}
+    <a href="{% url 'eventplan_edit' event_plan.id %}">Edit Plan</a>
+    <a href="{% url 'eventplan_delete' event_plan.id %}" style="background: #dc3545;">Delete Plan</a>
+{% endif %}
+<a href="{% url 'home' %}">Home</a>
+{% endblock %}
+
+{% block heading %}
+<h2>Event Plan: {{ event_plan.name }}</h2>
+{% endblock %}
+
+{% block content %}
+<div style="background: #f0f8ff; padding: 20px; border-radius: 8px; border: 1px solid #b3d9ff; margin-bottom: 20px;">
+    {% if event_plan.description %}
+    <div class="event-detail">
+        <strong>Description:</strong>
+        <span>{{ event_plan.description }}</span>
+    </div>
+    {% endif %}
+    
+    <div class="event-detail">
+        <strong>Location:</strong>
+        <span>
+            {% if event_plan.location %}
+                <a href="{% url 'location_events' event_plan.location.id %}">{{ event_plan.location.full_name }}</a>
+            {% else %}
+                Not specified
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="event-detail">
+        <strong>Expected Participants:</strong>
+        <span>{{ event_plan.expected_participants|default:"Not specified" }}</span>
+    </div>
+    
+    <div class="event-detail">
+        <strong>Recurrence:</strong>
+        <span>
+            {% if event_plan.recurrence %}
+                {{ event_plan.get_recurrence_display }}
+                {% if event_plan.weekday %}
+                    on {{ event_plan.get_weekday_display }}s
+                {% endif %}
+            {% else %}
+                No recurrence pattern
+            {% endif %}
+        </span>
+    </div>
+    
+    {% if event_plan.recur_from or event_plan.recur_until %}
+    <div class="event-detail">
+        <strong>Active Period:</strong>
+        <span>
+            {% if event_plan.recur_from %}
+                {{ event_plan.recur_from|date:"M j, Y" }}
+                {% if event_plan.recur_until %}
+                    → {{ event_plan.recur_until|date:"M j, Y" }}
+                {% else %}
+                    → ongoing
+                {% endif %}
+            {% elif event_plan.recur_until %}
+                Until {{ event_plan.recur_until|date:"M j, Y" }}
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+    
+    <div class="event-detail">
+        <strong>Organizers:</strong>
+        <span>
+            {% for org in event_plan.organizers.all %}
+                {{ org.name }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                None specified
+            {% endfor %}
+        </span>
+    </div>
+    
+    <div class="event-detail">
+        <strong>Created by:</strong>
+        <span>{{ event_plan.created_by.username }} on {{ event_plan.created_at|date:"M j, Y" }}</span>
+    </div>
+</div>
+
+{% if upcoming_dates %}
+<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+    <h3>Upcoming Event Dates</h3>
+    <p style="color: #666; margin-bottom: 15px;">Next 10 occurrences based on recurrence pattern:</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+        {% for upcoming_date in upcoming_dates %}
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: center;">
+            <strong>{{ upcoming_date|date:"M j, Y" }}</strong><br>
+            <small style="color: #666;">{{ upcoming_date|date:"l" }}</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
