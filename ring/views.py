@@ -15,18 +15,57 @@ from django.template.loader import render_to_string
 from .models import UserKey, RingKey, Ring, Secret
 
 @require_GET
-@login_required
+@require_GET
 def create_magic_link(request):
-    user = request.user
+    print(f"=== CREATE_MAGIC_LINK DEBUG ===")
+    print(f"Request user: {request.user} (ID: {request.user.id})")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    
     ring_id = request.GET.get('ring_id')
-    ring_key_obj = get_object_or_404(RingKey, ring=ring_id, user=user.id)
-    if not ring_key_obj.encrypted_key:
-        return HttpResponseBadRequest("You are not member of this ring.")
-
-    token = get_random_string(48)
-    request.session[f'key_token_{token}'] = ring_key_obj.encrypted_key
-    return JsonResponse({"link": f"https://yourdomain.com/import_key?token={token}"})
-
+    print(f"Requested ring_id: {ring_id}")
+    
+    if not ring_id:
+        return JsonResponse({'error': 'ring_id required'}, status=400)
+    
+    try:
+        ring = Ring.objects.get(id=ring_id)
+        print(f"Ring found: {ring.name} (ID: {ring.id})")
+        
+        # Check if user is a member with detailed logging
+        try:
+            ring_key = RingKey.objects.get(ring=ring, user=request.user)
+            print(f"RingKey found: {ring_key}")
+            print(f"RingKey details: Ring={ring_key.ring.id}, User={ring_key.user.id}")
+            
+            # Generate a unique token
+            token = get_random_string(32)
+            
+            # Store the encrypted key in session with the token
+            session_key = f'key_token_{token}'
+            request.session[session_key] = ring_key.encrypted_key
+            
+            # Create the magic link
+            base_url = request.build_absolute_uri('/')
+            magic_link = f"{base_url}ring/import_key/?token={token}"
+            
+            print(f"Generated magic link: {magic_link}")
+            
+            return JsonResponse({'link': magic_link})
+            
+        except RingKey.DoesNotExist:
+            print(f"RingKey NOT found for ring={ring_id}, user={request.user.id}")
+            
+            # Let's see what RingKeys DO exist for this ring
+            existing_keys = RingKey.objects.filter(ring=ring)
+            print(f"Existing RingKeys for ring {ring_id}:")
+            for rk in existing_keys:
+                print(f"  User {rk.user.id} ({rk.user.username})")
+                
+            return JsonResponse({'error': 'You are not member of this ring.'}, status=400)
+        
+    except Ring.DoesNotExist:
+        return JsonResponse({'error': 'Ring not found'}, status=404)
+    
 @require_GET
 def get_encrypted_key(request):
     token = request.GET.get('token')

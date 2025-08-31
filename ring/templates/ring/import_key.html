@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Ring Key - ZenChanger</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .container { text-align: center; }
+        .status { margin: 20px 0; padding: 15px; border-radius: 4px; }
+        .loading { background: #e6f3ff; color: #0066cc; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Import Ring Key</h1>
+        <div id="status" class="status loading">Loading...</div>
+    </div>
+
+    <script type="module">
+        import ImportKey from '{% static "ring/js/userkey_import.js" %}';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const importKey = ImportKey();
+            const container = document.querySelector('.container');
+            container.appendChild(importKey.render());
+            importKey.init();
+        });
+    </script>
+</body>
+</html>

@@ -132,17 +132,29 @@
                 button.disabled = true;
                 button.textContent = 'Generating...';
                 
+                console.log(`Making request to: /ring/create_magic_link/?ring_id=${ringId}`);
+                
                 // Use your existing create_magic_link endpoint
                 const response = await fetch(`/ring/create_magic_link/?ring_id=${ringId}`, {
                     method: 'GET',
                     credentials: 'include'
                 });
                 
+                console.log(`Response status: ${response.status}`);
+                console.log(`Response ok: ${response.ok}`);
+                
+                // Get the response text to see what error we're getting
+                const responseText = await response.text();
+                console.log(`Response text: ${responseText}`);
+                
                 if (!response.ok) {
-                    throw new Error('Failed to generate magic link');
+                    throw new Error(`Server returned ${response.status}: ${responseText}`);
                 }
                 
-                const data = await response.json();
+                // Try to parse as JSON
+                const data = JSON.parse(responseText);
+                console.log('Parsed response data:', data);
+                
                 const magicLink = data.link;
                 
                 // Copy to clipboard
@@ -160,12 +172,11 @@
                 
             } catch (error) {
                 console.error('Error copying ring link:', error);
-                alert('Failed to generate or copy link. Please try again.');
+                alert(`Failed to generate or copy link: ${error.message}`);
                 
                 button.textContent = originalText;
                 button.disabled = false;
             }
-        }
-    </script>
+        }    </script>
 </body>
 </html>
