@@ -1,328 +1,154 @@
-{% load static %}
-{% include "core/base_header.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Events in {{ location.name|title }} - ZenChanger</title>
-    {% include "home/components/event_plans_styles.html" %}
-    {% include "home/components/event_status_styles.html" %}
-    <style>
-        /* Keep only the location_events specific styles here */
-        .event-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            background: #2d662d;
-            color: #fff;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        .btn {
-            background: #2d662d;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn:hover {
-            background: #228b22;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .event-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .event-table th, .event-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .event-table th {
-            background: #f8f9fa;
-            font-weight: bold;
-        }
-        .event-table tr:hover {
-            background: #f5f5f5;
-        }
-        .pagination {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .pagination a, .pagination span {
-            display: inline-block;
-            padding: 8px 12px;
-            margin: 0 4px;
-            text-decoration: none;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .pagination .current {
-            background: #2d662d;
-            color: white;
-        }
-        .section-divider {
-            border-top: 2px solid #ddd;
-            margin: 30px 0;
-            padding-top: 20px;
-        }
-        .location-header {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            margin-bottom: 20px;
-        }
-        .location-detail {
-            margin: 10px 0;
-        }
-        .location-detail strong {
-            color: #333;
-            min-width: 100px;
-            display: inline-block;
-        }
-        .organizer-tag {
-            background: #e6f3ff;
-            color: #0066cc;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            border: 1px solid #b3d9ff;
-            margin-right: 5px;
-            display: inline-block;
-        }
-        .badge {
-            display: inline-block;
-            background: #007bff;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-        .badge-gc {
-            background: #28a745;
-        }
-    </style>
-</head>
-<body>
-    <div class="event-container">
-        <div class="nav-links">
-            <a href="{% url 'event_list' %}">← Back to Events</a>
-            <a href="{% url 'event_create' %}?location={{ location.id }}">Create Event Here</a>
-            <a href="{% url 'eventplan_create' %}?location={{ location.id }}">Create Event Plan</a>
-            <a href="{% url 'home' %}">Home</a>
-        </div>
+{% extends "home/event_list_base.html" %}
 
-        <h2>📍 Events in {{ location.name|title }}</h2>
+{% block page_title %}Events in {{ location.name|title }} - ZenChanger{% endblock %}
 
-        <!-- Location Information -->
-        <div class="location-header">
-            <div class="location-detail">
-                <strong>Location:</strong> {{ location.full_name }}
-            </div>
-            <div class="location-detail">
-                <strong>Country:</strong> {{ location.in_country.name|title }}
-            </div>
-            {% if location.timezone %}
-            <div class="location-detail">
-                <strong>Timezone:</strong> {{ location.timezone }}
-            </div>
-            {% endif %}
-        </div>
+{% block navigation %}
+<div class="nav-links">
+    <a href="{% url 'event_list' %}">← Back to Events</a>
+    <a href="{% url 'event_create' %}?location={{ location.id }}">Create Event Here</a>
+    <a href="{% url 'eventplan_create' %}?location={{ location.id }}">Create Event Plan</a>
+    <a href="{% url 'home' %}">Home</a>
+</div>
+{% endblock %}
 
-        <!-- Event Plans Section for this location -->
-        {% if event_plans %}
-        <div class="plans-section">
-            <h3>📅 Event Plans for {{ location.name|title }} ({{ event_plans.count }})</h3>
-            <p style="color: #666; margin-bottom: 15px;">Recurring event templates and future planned events at this location</p>
-            
-            <table class="plan-table">
-                <thead>
-                    <tr>
-                        <th>Plan Name</th>
-                        <th>Recurrence</th>
-                        <th>Active Period</th>
-                        <th>Organizers</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for plan in event_plans %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'eventplan_detail' plan.id %}" style="color: #0066cc; text-decoration: none;">
-                                {{ plan.name }}
-                            </a>
-                            {% if plan.description %}
-                            <div style="font-size: 0.8em; color: #666; margin-top: 2px;">
-                                {{ plan.description|truncatechars:80 }}
-                            </div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if plan.recurrence and plan.recurrence != 'irregular' %}
-                                <span class="recurrence-badge">{{ plan.get_recurrence_display }}</span>
-                                {% if plan.weekday %}
-                                    <span class="weekday-badge">{{ plan.get_weekday_display }}</span>
-                                {% endif %}
-                            {% elif plan.recurrence == 'irregular' %}
-                                <span style="color: #666; font-style: italic;">Irregular</span>
-                            {% else %}
-                                <span style="color: #666; font-style: italic;">No pattern</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if plan.recur_from %}
-                                {{ plan.recur_from|date:"M j, Y" }}
-                                {% if plan.recur_until %}
-                                    → {{ plan.recur_until|date:"M j, Y" }}
-                                {% else %}
-                                    → ongoing
-                                {% endif %}
-                            {% else %}
-                                <span style="color: #666; font-style: italic;">Not set</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% for org in plan.organizers.all %}
-                                {{ org.name }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                                <span style="color: #666; font-style: italic;">None</span>
-                            {% endfor %}
-                        </td>
-                        <td>
-                            <a href="{% url 'eventplan_detail' plan.id %}" class="btn btn-plan" style="padding: 4px 8px; font-size: 0.9em;">View</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
+{% block page_header %}
+<h2>📍 Events in {{ location.name|title }}</h2>
+{% endblock %}
 
-        <!-- Events Section -->
-        <div class="section-divider">
-            <h3>📍 Individual Events</h3>
-            <p style="margin-bottom: 20px;">
-                {% if page_obj %}
-                    Total events at this location: {{ page_obj.paginator.count }}
-                {% else %}
-                    Loading events...
-                {% endif %}
-            </p>
-
-            <!-- Events Table -->
-            <table class="event-table">
-                <thead>
-                    <tr>
-                        <th>Event ID</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Organizers</th>
-                        <th>Source</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event_data in page_obj %}
-                    {% if event_data.event.id %}
-                    <tr class="event-row-{{ event_data.status }}">
-                        <td>
-                            <a href="{% url 'event_detail' event_data.event.id %}" style="color: #0066cc; text-decoration: none;">{{ event_data.event.id }}</a>
-                            {% if event_data.event.ext_data_src == 'gc' %}
-                            <span class="badge badge-gc">GC</span>
-                            {% elif event_data.event.ext_data_src %}
-                            <span class="badge">{{ event_data.event.ext_data_src|upper }}</span>
-                            {% endif %}
-                            {% if event_data.status == 'cancelled-future' %}
-                                <span style="font-size: 0.7em; color: #dc3545; font-weight: bold; margin-left: 5px;">CANCELLED</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ event_data.event.date|date:"M j, Y" }}</td>
-                        <td>{{ event_data.event.time_of_day }}</td>
-                        <td>
-                            {% if event_data.event.organizers.all %}
-                                {% for org in event_data.event.organizers.all %}
-                                <span class="organizer-tag">{{ org.name }}</span>
-                                {% endfor %}
-                            {% else %}
-                                <span style="color: #999; font-style: italic;">None</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if event_data.event.ext_data_src == 'gc' %}
-                            Web
-                            {% elif event_data.event.ext_data_src %}
-                            {{ event_data.event.ext_data_src|upper }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'event_detail' event_data.event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.9em;">View</a>
-                            {% if event_data.status == 'cancelled-future' %}
-                                <span style="font-size: 0.8em; color: #dc3545; font-weight: bold;">CANCELLED</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <!-- Row for events with empty ID -->
-                    <tr style="background-color: #fff3cd; border: 1px solid #ffeaa7;">
-                        <td colspan="6" style="text-align: center; font-style: italic; color: #856404;">
-                            Event with empty ID found (Date: {{ event_data.event.date }}) - 
-                            <a href="/admin/core/event/{{ event_data.event.pk }}/change/" target="_blank" style="color: #856404;">Fix in Admin</a>
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" style="text-align: center; font-style: italic;">No events found at this location.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Add the legend -->
-            {% include "home/components/event_status_legend.html" %}
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <div class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <span class="current">{{ num }}</span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <a href="?page={{ num }}">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
-                {% endif %}
-            </div>
-
-            <p>
-                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
-            </p>
-            {% endif %}
-        </div>
+{% block context_info %}
+<div class="info-header">
+    <div class="info-detail">
+        <strong>Location:</strong> {{ location.full_name }}
     </div>
-</body>
-</html>
+    <div class="info-detail">
+        <strong>Country:</strong> {{ location.in_country.name|title }}
+    </div>
+    {% if location.timezone %}
+    <div class="info-detail">
+        <strong>Timezone:</strong> {{ location.timezone }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block event_plans_section %}
+<!-- Event Plans Section for this location -->
+{% if event_plans %}
+<div class="plans-section">
+    <h3>📅 Event Plans for {{ location.name|title }} ({{ event_plans.count }})</h3>
+    <p style="color: #666; margin-bottom: 15px;">Recurring event templates and future planned events at this location</p>
+    
+    <table class="plan-table">
+        <thead>
+            <tr>
+                <th>Plan Name</th>
+                <th>Recurrence</th>
+                <th>Active Period</th>
+                <th>Organizers</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plan in event_plans %}
+            <tr>
+                <td>
+                    <a href="{% url 'eventplan_detail' plan.id %}" style="color: #0066cc; text-decoration: none;">
+                        {{ plan.name }}
+                    </a>
+                    {% if plan.description %}
+                    <div style="font-size: 0.8em; color: #666; margin-top: 2px;">
+                        {{ plan.description|truncatechars:80 }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if plan.recurrence and plan.recurrence != 'irregular' %}
+                        <span class="recurrence-badge">{{ plan.get_recurrence_display }}</span>
+                        {% if plan.weekday %}
+                            <span class="weekday-badge">{{ plan.get_weekday_display }}</span>
+                        {% endif %}
+                    {% elif plan.recurrence == 'irregular' %}
+                        <span style="color: #666; font-style: italic;">Irregular</span>
+                    {% else %}
+                        <span style="color: #666; font-style: italic;">No pattern</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if plan.recur_from %}
+                        {{ plan.recur_from|date:"M j, Y" }}
+                        {% if plan.recur_until %}
+                            → {{ plan.recur_until|date:"M j, Y" }}
+                        {% else %}
+                            → ongoing
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #666; font-style: italic;">Not set</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% for org in plan.organizers.all %}
+                        {{ org.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        <span style="color: #666; font-style: italic;">None</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{% url 'eventplan_detail' plan.id %}" class="btn btn-plan" style="padding: 4px 8px; font-size: 0.9em;">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block events_section_header %}
+<h3>📍 Individual Events</h3>
+<p style="margin-bottom: 20px;">
+    {% if page_obj %}
+        Total events at this location: {{ page_obj.paginator.count }}
+    {% else %}
+        Loading events...
+    {% endif %}
+</p>
+{% endblock %}
+
+{% block table_headers %}
+<th>Date</th>
+<th>Time</th>
+<th>Country</th>
+<th>Organizers</th>
+<th>Source</th>
+<th>Actions</th>
+{% endblock %}
+
+{% block location_country_columns %}
+<td>
+    <a href="{% url 'country_events' event_data.event.country.code %}" class="country-link">
+        {{ event_data.event.country.name|title }}
+    </a>
+</td>
+<td>
+    {% if event_data.event.organizers.all %}
+        {% for org in event_data.event.organizers.all %}
+        <span class="organizer-tag">{{ org.name }}</span>
+        {% endfor %}
+    {% else %}
+        <span style="color: #999; font-style: italic;">None</span>
+    {% endif %}
+</td>
+<td>
+    {% if event_data.event.ext_data_src == 'gc' %}
+    Web
+    {% elif event_data.event.ext_data_src %}
+    {{ event_data.event.ext_data_src|upper }}
+    {% else %}
+    -
+    {% endif %}
+</td>
+{% endblock %}
+
+{% block empty_message %}
+<td colspan="6" style="text-align: center; font-style: italic;">No events found at this location.</td>
+{% endblock %}

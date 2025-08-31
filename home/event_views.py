@@ -432,6 +432,28 @@ def location_events_view(request, location_id):
         'event_plans': event_plans,
     })
 
+# Add this view if it doesn't exist
+
+@login_required
+def country_events_view(request, country_code):
+    """View events in a specific country"""
+    country = get_object_or_404(Country, code=country_code)
+    
+    events = Event.objects.filter(country=country).select_related('country', 'location').prefetch_related('organizers').order_by('-date')
+    
+    # Add status information using utility function
+    events_with_status = add_status_to_events(events)
+    
+    # Pagination
+    paginator = Paginator(events_with_status, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'home/country_events.html', {
+        'country': country,
+        'page_obj': page_obj,
+    })
+
 # AJAX helper view for getting locations by country
 @login_required
 def get_locations_by_country(request):

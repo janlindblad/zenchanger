@@ -13,7 +13,7 @@
     }
 
     .event-row-past {
-        /* Keep default background */
+        background-color: #fafafa !important; /* Light gray/white for older events */
     }
 
     .event-table tr:hover.event-row-future {
@@ -26,6 +26,10 @@
 
     .event-table tr:hover.event-row-recent-past {
         background-color: #fff0b3 !important;
+    }
+
+    .event-table tr:hover.event-row-past {
+        background-color: #eeeeee !important;
     }
 
     /* Event status legend */
@@ -58,5 +62,33 @@
 
     .status-example.recent {
         background: #fff9e6;
+    }
+
+    .status-example.past {
+        background: #fafafa;
+        border: 1px solid #ddd;
+    }
+
+    /* Clickable date styling */
+    .event-date-link {
+        color: #0066cc;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .event-date-link:hover {
+        text-decoration: underline;
+        color: #004499;
+    }
+
+    /* Clickable country styling */
+    .country-link {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    .country-link:hover {
+        text-decoration: underline;
+        color: #004499;
     }
 </style>

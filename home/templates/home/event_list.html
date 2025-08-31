@@ -1,262 +1,129 @@
-{% load static %}
-{% include "core/base_header.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Events - ZenChanger</title>
-    {% include "home/components/event_plans_styles.html" %}
-    {% include "home/components/event_status_styles.html" %}
-    <style>
-        /* Keep only the event_list specific styles here */
-        .event-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .filters {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .filter-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 150px;
-        }
-        .filter-group label {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .filter-group input, .filter-group select {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .btn {
-            background: #2d662d;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn:hover {
-            background: #228b22;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .event-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .event-table th, .event-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .event-table th {
-            background: #f8f9fa;
-            font-weight: bold;
-        }
-        .event-table tr:hover {
-            background: #f5f5f5;
-        }
-        .pagination {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .pagination a, .pagination span {
-            display: inline-block;
-            padding: 8px 12px;
-            margin: 0 4px;
-            text-decoration: none;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .pagination .current {
-            background: #2d662d;
-            color: white;
-        }
-        .nav-links {
-            margin-bottom: 20px;
-        }
-        .nav-links a {
-            background: #2d662d;
-            color: #fff;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        .section-divider {
-            border-top: 2px solid #ddd;
-            margin: 30px 0;
-            padding-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="event-container">
-        <div class="nav-links">
-            <a href="{% url 'home' %}">← Back to Home</a>
-            <a href="{% url 'event_create' %}">Create New Event</a>
-            <a href="{% url 'eventplan_create' %}" class="btn-plan">Create Event Plan</a>
-        </div>
+{% extends "home/event_list_base.html" %}
 
-        <h2>Events & Event Plans</h2>
+{% block page_title %}Events - ZenChanger{% endblock %}
 
-        {% if error %}
-        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0;">
-            <strong>Error:</strong> {{ error }}
-        </div>
-        {% endif %}
+{% block navigation %}
+<div class="nav-links">
+    <a href="{% url 'event_create' %}">Create Event</a>
+    <a href="{% url 'eventplan_create' %}">Create Event Plan</a>
+    <a href="{% url 'home' %}">Home</a>
+</div>
+{% endblock %}
 
-        <!-- Event Plans Section -->
-        {% include "home/components/event_plans_table.html" %}
+{% block page_header %}
+<h2>📅 Events</h2>
+{% endblock %}
 
-        <!-- Events Section -->
-        <div class="section-divider">
-            <h3>📍 Individual Events</h3>
-            <p style="margin-bottom: 20px;">
-                {% if page_obj %}
-                    Total events: {{ page_obj.paginator.count }}
-                {% else %}
-                    Loading events...
-                {% endif %}
-            </p>
+{% block event_plans_section %}
+<!-- Event Plans Section -->
+{% if event_plans %}
+{% include "home/components/event_plans_table.html" %}
+{% endif %}
+{% endblock %}
 
-            <!-- Filters -->
-            <form method="get" class="filters">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="search">Search:</label>
-                        <input type="text" id="search" name="search" value="{{ current_filters.search }}" placeholder="Event ID, country, location...">
-                    </div>
-                    <div class="filter-group">
-                        <label for="country">Country:</label>
-                        <select id="country" name="country">
-                            <option value="">All Countries</option>
-                            {% for country in countries %}
-                            <option value="{{ country.code }}" {% if current_filters.country == country.code %}selected{% endif %}>
-                                {{ country.name|title }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="location">Location:</label>
-                        <select id="location" name="location">
-                            <option value="">All Locations</option>
-                            {% for location in locations %}
-                            <option value="{{ location.id }}" {% if current_filters.location|add:0 == location.id %}selected{% endif %}>
-                                {{ location.name|title }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="date_from">Date From:</label>
-                        <input type="date" id="date_from" name="date_from" value="{{ current_filters.date_from }}">
-                    </div>
-                    <div class="filter-group">
-                        <label for="date_to">Date To:</label>
-                        <input type="date" id="date_to" name="date_to" value="{{ current_filters.date_to }}">
-                    </div>
-                    <div class="filter-group" style="align-self: flex-end;">
-                        <button type="submit" class="btn">Filter</button>
-                        <a href="{% url 'event_list' %}" class="btn btn-secondary">Clear</a>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Events Table -->
-            <table class="event-table">
-                <thead>
-                    <tr>
-                        <th>Event ID</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Country</th>
-                        <th>Location</th>
-                        <th>Organizers</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event_data in page_obj %}
-                    <tr class="event-row-{{ event_data.status }}">
-                        <td><a href="{% url 'event_detail' event_data.event.id %}">{{ event_data.event.id }}</a></td>
-                        <td>{{ event_data.event.date }}</td>
-                        <td>{{ event_data.event.time_of_day }}</td>
-                        <td>{{ event_data.event.country.name|title }}</td>
-                        <td>
-                            {% if event_data.event.location %}
-                                <a href="{% url 'location_events' event_data.event.location.id %}">{{ event_data.event.location.name|title }}</a>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% for org in event_data.event.organizers.all %}
-                                {{ org.name }}{% if not forloop.last %}, {% endif %}
-                            {% endfor %}
-                        </td>
-                        <td>
-                            <a href="{% url 'event_detail' event_data.event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.9em;">View</a>
-                            {% if event_data.status == 'cancelled-future' %}
-                                <span style="font-size: 0.8em; color: #dc3545; font-weight: bold;">CANCELLED</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" style="text-align: center; font-style: italic;">No events found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Add the legend -->
-            {% include "home/components/event_status_legend.html" %}
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <div class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <span class="current">{{ num }}</span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
-                    {% endif %}
+{% block events_section_header %}
+<!-- Filters -->
+<form method="get" class="filter-form">
+    <div class="filters">
+        <div class="filter-group">
+            <label for="country">Country:</label>
+            <select name="country" id="country">
+                <option value="">All Countries</option>
+                {% for country in countries %}
+                <option value="{{ country.code }}" {% if current_filters.country == country.code %}selected{% endif %}>
+                    {{ country.name|title }}
+                </option>
                 {% endfor %}
+            </select>
+        </div>
 
-                {% if page_obj.has_next %}
-                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next &raquo;</a>
-                {% endif %}
-            </div>
+        <div class="filter-group">
+            <label for="location">Location:</label>
+            <select name="location" id="location">
+                <option value="">All Locations</option>
+                {% for location in locations %}
+                <option value="{{ location.id }}" {% if current_filters.location == location.id|stringformat:"s" %}selected{% endif %}>
+                    {{ location.name|title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-            <p>
-                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
-            </p>
-            {% endif %}
+        <div class="filter-group">
+            <label for="date_from">From Date:</label>
+            <input type="date" name="date_from" id="date_from" value="{{ current_filters.date_from }}">
+        </div>
+
+        <div class="filter-group">
+            <label for="date_to">To Date:</label>
+            <input type="date" name="date_to" id="date_to" value="{{ current_filters.date_to }}">
+        </div>
+
+        <div class="filter-group">
+            <label for="search">Search:</label>
+            <input type="text" name="search" id="search" value="{{ current_filters.search }}" placeholder="Search events...">
+        </div>
+
+        <div class="filter-group">
+            <button type="submit" class="btn">Filter</button>
+            <a href="{% url 'event_list' %}" class="btn btn-secondary">Clear</a>
         </div>
     </div>
-</body>
-</html>
+</form>
+
+<h3>📍 Individual Events</h3>
+<p style="margin-bottom: 20px;">
+    {% if page_obj %}
+        Total events: {{ page_obj.paginator.count }}
+    {% else %}
+        Loading events...
+    {% endif %}
+</p>
+{% endblock %}
+
+{% block extra_styles %}
+.filter-form {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.filter-group input, .filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filter-group input:focus, .filter-group select:focus {
+    outline: none;
+    border-color: #2d662d;
+    box-shadow: 0 0 0 2px rgba(45, 102, 45, 0.2);
+}
+{% endblock %}
+
+{% block pagination_params %}{% if current_filters.country %}&country={{ current_filters.country }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% endblock %}
+
+{% block pagination_params_num %}{% if current_filters.country %}&country={{ current_filters.country }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% endblock %}
+
+{% block pagination_params_next %}{% if current_filters.country %}&country={{ current_filters.country }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.date_from %}&date_from={{ current_filters.date_from }}{% endif %}{% if current_filters.date_to %}&date_to={{ current_filters.date_to }}{% endif %}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% endblock %}

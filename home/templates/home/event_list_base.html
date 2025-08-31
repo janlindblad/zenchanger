@@ -1,0 +1,276 @@
+{% load static %}
+{% include "core/base_header.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block page_title %}Events - ZenChanger{% endblock %}</title>
+    {% include "home/components/event_plans_styles.html" %}
+    {% include "home/components/event_status_styles.html" %}
+    <style>
+        .event-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            background: #2d662d;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .nav-links a:hover {
+            background: #228b22;
+        }
+        .btn {
+            background: #2d662d;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #228b22;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .event-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .event-table th, .event-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .event-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .event-table tr:hover {
+            background: #f5f5f5;
+        }
+        .pagination {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .pagination a, .pagination span {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .pagination .current {
+            background: #2d662d;
+            color: white;
+        }
+        .section-divider {
+            border-top: 2px solid #ddd;
+            margin: 30px 0;
+            padding-top: 20px;
+        }
+        .info-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .info-detail {
+            margin: 10px 0;
+        }
+        .info-detail strong {
+            color: #333;
+            min-width: 100px;
+            display: inline-block;
+        }
+        .organizer-tag {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            border: 1px solid #b3d9ff;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .badge-gc {
+            background: #28a745;
+        }
+        .location-link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .location-link:hover {
+            text-decoration: underline;
+        }
+        .country-link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .country-link:hover {
+            text-decoration: underline;
+        }
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="event-container">
+        {% block navigation %}{% endblock %}
+
+        {% block page_header %}{% endblock %}
+
+        {% block context_info %}{% endblock %}
+
+        {% block event_plans_section %}{% endblock %}
+
+        <!-- Events Section -->
+        <div class="section-divider">
+            {% block events_section_header %}
+            <h3>📍 Individual Events</h3>
+            <p style="margin-bottom: 20px;">
+                {% if page_obj %}
+                    Total events: {{ page_obj.paginator.count }}
+                {% else %}
+                    Loading events...
+                {% endif %}
+            </p>
+            {% endblock %}
+
+            {% block events_table %}
+            <!-- Events Table -->
+            <table class="event-table">
+                <thead>
+                    <tr>
+                        {% block table_headers %}
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Country</th>
+                        <th>Location</th>
+                        <th>Organizers</th>
+                        <th>Actions</th>
+                        {% endblock %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event_data in page_obj %}
+                    {% if event_data.event.id %}
+                    <tr class="event-row-{{ event_data.status }}">
+                        {% block table_row %}
+                        <td>
+                            <a href="{% url 'event_detail' event_data.event.id %}" class="event-date-link">
+                                {{ event_data.event.date|date:"M j, Y" }}
+                            </a>
+                            {% block event_badges %}
+                            {% if event_data.event.ext_data_src == 'gc' %}
+                            <span class="badge badge-gc" style="margin-left: 8px;">GC</span>
+                            {% elif event_data.event.ext_data_src %}
+                            <span class="badge" style="margin-left: 8px;">{{ event_data.event.ext_data_src|upper }}</span>
+                            {% endif %}
+                            {% if event_data.status == 'cancelled-future' %}
+                                <div style="font-size: 0.7em; color: #dc3545; font-weight: bold;">CANCELLED</div>
+                            {% endif %}
+                            {% endblock %}
+                        </td>
+                        <td>{{ event_data.event.time_of_day }}</td>
+                        {% block location_country_columns %}
+                        <td>
+                            <a href="{% url 'country_events' event_data.event.country.code %}" class="country-link">
+                                {{ event_data.event.country.name|title }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if event_data.event.location %}
+                                <a href="{% url 'location_events' event_data.event.location.id %}">{{ event_data.event.location.name|title }}</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        {% endblock %}
+                        <td>
+                            {% if event_data.event.organizers.all %}
+                                {% for org in event_data.event.organizers.all %}
+                                <span class="organizer-tag">{{ org.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: #999; font-style: italic;">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'event_detail' event_data.event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.9em;">View</a>
+                        </td>
+                        {% endblock %}
+                    </tr>
+                    {% else %}
+                    <!-- Row for events with empty ID -->
+                    <tr style="background-color: #fff3cd; border: 1px solid #ffeaa7;">
+                        <td colspan="{% block empty_id_colspan %}6{% endblock %}" style="text-align: center; font-style: italic; color: #856404;">
+                            Event with empty ID found (Date: {{ event_data.event.date }}) - 
+                            <a href="/admin/core/event/{{ event_data.event.pk }}/change/" target="_blank" style="color: #856404;">Fix in Admin</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr>
+                        {% block empty_message %}
+                        <td colspan="6" style="text-align: center; font-style: italic;">No events found.</td>
+                        {% endblock %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endblock %}
+
+            <!-- Add the legend -->
+            {% include "home/components/event_status_legend.html" %}
+
+            {% block pagination %}
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% block pagination_params %}{% endblock %}">&laquo; Previous</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% block pagination_params_num %}{% endblock %}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% block pagination_params_next %}{% endblock %}">Next &raquo;</a>
+                {% endif %}
+            </div>
+
+            <p>
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} events
+            </p>
+            {% endif %}
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>

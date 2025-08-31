@@ -10,7 +10,7 @@ from .event_views import (
     event_edit_view, event_delete_view, location_events_view,
     get_locations_by_country, search_locations, search_organizations,
     eventplan_create_view, eventplan_detail_view, eventplan_edit_view, eventplan_delete_view,
-    cancel_event_view, uncancel_event_view
+    cancel_event_view, uncancel_event_view, country_events_view
 )
 from .location_views import location_create_view, location_search_popup, location_quick_create
 
@@ -30,11 +30,12 @@ urlpatterns = [
     path('events/<str:event_id>/', event_detail_view, name='event_detail'),
     path('events/<str:event_id>/edit/', event_edit_view, name='event_edit'),
     path('events/<str:event_id>/delete/', event_delete_view, name='event_delete'),
-    path('locations/<int:location_id>/events/', location_events_view, name='location_events'),
+    path('events/country/<str:country_code>/', country_events_view, name='country_events'),
 
     # Location management URLs
     path('locations/create/', location_create_view, name='location_create'),
     path('locations/quick-create/', location_quick_create, name='location_quick_create'),
+    path('locations/<int:location_id>/events/', location_events_view, name='location_events'),
 
     # AJAX endpoints
     path('api/locations-by-country/', get_locations_by_country, name='get_locations_by_country'),

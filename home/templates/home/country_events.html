@@ -1,0 +1,83 @@
+{% extends "home/event_list_base.html" %}
+
+{% block page_title %}Events in {{ country.name|title }} - ZenChanger{% endblock %}
+
+{% block navigation %}
+<div class="nav-links">
+    <a href="{% url 'event_list' %}">← Back to Events</a>
+    <a href="{% url 'event_create' %}?country={{ country.code }}">Create Event Here</a>
+    <a href="{% url 'eventplan_create' %}?country={{ country.code }}">Create Event Plan</a>
+    <a href="{% url 'home' %}">Home</a>
+</div>
+{% endblock %}
+
+{% block page_header %}
+<h2>🌍 Events in {{ country.name|title }}</h2>
+{% endblock %}
+
+{% block context_info %}
+<div class="info-header">
+    <div class="info-detail">
+        <strong>Country:</strong> {{ country.name|title }} ({{ country.code|upper }})
+    </div>
+    {% if country.timezone %}
+    <div class="info-detail">
+        <strong>Timezone:</strong> {{ country.timezone }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block events_section_header %}
+<h3>📍 Individual Events</h3>
+<p style="margin-bottom: 20px;">
+    {% if page_obj %}
+        Total events in {{ country.name|title }}: {{ page_obj.paginator.count }}
+    {% else %}
+        Loading events...
+    {% endif %}
+</p>
+{% endblock %}
+
+{% block table_headers %}
+<th>Date</th>
+<th>Time</th>
+<th>Location</th>
+<th>Organizers</th>
+<th>Source</th>
+<th>Actions</th>
+{% endblock %}
+
+{% block location_country_columns %}
+<td>
+    {% if event_data.event.location %}
+        <a href="{% url 'location_events' event_data.event.location.id %}" class="location-link">
+            {{ event_data.event.location.name|title }}
+        </a>
+    {% else %}
+        <span style="color: #999; font-style: italic;">No location</span>
+    {% endif %}
+</td>
+<td>
+    {% if event_data.event.organizers.all %}
+        {% for org in event_data.event.organizers.all %}
+        <span class="organizer-tag">{{ org.name }}</span>
+        {% endfor %}
+    {% else %}
+        <span style="color: #999; font-style: italic;">None</span>
+    {% endif %}
+</td>
+<td>
+    {% if event_data.event.ext_data_src == 'gc' %}
+    Web
+    {% elif event_data.event.ext_data_src %}
+    {{ event_data.event.ext_data_src|upper }}
+    {% else %}
+    -
+    {% endif %}
+</td>
+{% endblock %}
+
+{% block empty_message %}
+<td colspan="6" style="text-align: center; font-style: italic;">No events found in {{ country.name|title }}.</td>
+{% endblock %}
