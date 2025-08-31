@@ -1,5 +1,4 @@
-import re, uuid
-from datetime import date, datetime
+from datetime import datetime, date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,6 +6,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from core.models import Event, Country, Location, Organization, EventPlan                
+from .utils import add_status_to_events
 
 import logging
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def event_list_view(request):
             'location', 'country'
         ).prefetch_related('organizers').order_by('name')
         
-        # Filtering (existing code for events)
+        # Filtering (existing filtering code)
         country_filter = request.GET.get('country')
         location_filter = request.GET.get('location')
         date_from = request.GET.get('date_from')
@@ -51,8 +51,11 @@ def event_list_view(request):
                 Q(location__name__icontains=search)
             )
         
-        # Pagination
-        paginator = Paginator(events, 50)
+        # Add status information using utility function
+        events_with_status = add_status_to_events(events)
+        
+        # Pagination on the enriched data
+        paginator = Paginator(events_with_status, 50)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
@@ -60,11 +63,11 @@ def event_list_view(request):
         countries = Country.objects.filter(visibility=Country.Visibility.DEFAULT).order_by('name')
         locations = Location.objects.order_by('name')
         
-        logger.info(f"Rendering template with {page_obj.object_list.count()} events on page")
+        logger.info(f"Rendering template with {len(page_obj.object_list)} events on page")
         
         return render(request, 'home/event_list.html', {
             'page_obj': page_obj,
-            'event_plans': event_plans,  # Add this line
+            'event_plans': event_plans,
             'countries': countries,
             'locations': locations,
             'current_filters': {
@@ -79,15 +82,12 @@ def event_list_view(request):
         logger.error(f"Error in event_list_view: {e}")
         return render(request, 'home/event_list.html', {
             'page_obj': None,
-            'event_plans': EventPlan.objects.none(),  # Add this line
+            'event_plans': EventPlan.objects.none(),
             'countries': [],
             'locations': [],
             'current_filters': {},
             'error': str(e)
         })
-
-# Add this import at the top of the file
-from datetime import datetime, date, timedelta
 
 def generate_time_options():
     """Generate time options for select dropdown"""
@@ -406,8 +406,6 @@ def event_delete_view(request, event_id):
     
     return render(request, 'home/event_delete.html', {'event': event})
 
-# Update the location_events_view function
-
 @login_required
 def location_events_view(request, location_id):
     """View events in a specific location"""
@@ -420,15 +418,18 @@ def location_events_view(request, location_id):
         location=location
     ).select_related('location', 'country').prefetch_related('organizers').order_by('name')
     
+    # Add status information using utility function
+    events_with_status = add_status_to_events(events)
+    
     # Pagination
-    paginator = Paginator(events, 50)
+    paginator = Paginator(events_with_status, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
     return render(request, 'home/location_events.html', {
         'location': location,
         'page_obj': page_obj,
-        'event_plans': event_plans,  # Add this line
+        'event_plans': event_plans,
     })
 
 # AJAX helper view for getting locations by country

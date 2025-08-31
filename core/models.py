@@ -260,6 +260,13 @@ class Event(models.Model):
     created_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='events_created')
     history = HistoricalRecords()
 
+    def clean(self):
+        """Validate event fields"""
+        from django.core.exceptions import ValidationError
+        
+        if not self.id or self.id.strip() == "":
+            raise ValidationError("Event ID cannot be empty")
+
     @staticmethod
     def get_unique_id(prefix):
         return f"{prefix}:{uuid.uuid4().hex[:8]}"

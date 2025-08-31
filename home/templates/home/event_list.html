@@ -5,7 +5,9 @@
 <head>
     <title>Events - ZenChanger</title>
     {% include "home/components/event_plans_styles.html" %}
+    {% include "home/components/event_status_styles.html" %}
     <style>
+        /* Keep only the event_list specific styles here */
         .event-container {
             max-width: 1200px;
             margin: 20px auto;
@@ -194,26 +196,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for event in page_obj %}
-                    <tr>
-                        <td><a href="{% url 'event_detail' event.id %}">{{ event.id }}</a></td>
-                        <td>{{ event.date }}</td>
-                        <td>{{ event.time_of_day }}</td>
-                        <td>{{ event.country.name|title }}</td>
+                    {% for event_data in page_obj %}
+                    <tr class="event-row-{{ event_data.status }}">
+                        <td><a href="{% url 'event_detail' event_data.event.id %}">{{ event_data.event.id }}</a></td>
+                        <td>{{ event_data.event.date }}</td>
+                        <td>{{ event_data.event.time_of_day }}</td>
+                        <td>{{ event_data.event.country.name|title }}</td>
                         <td>
-                            {% if event.location %}
-                                <a href="{% url 'location_events' event.location.id %}">{{ event.location.name|title }}</a>
+                            {% if event_data.event.location %}
+                                <a href="{% url 'location_events' event_data.event.location.id %}">{{ event_data.event.location.name|title }}</a>
                             {% else %}
                                 -
                             {% endif %}
                         </td>
                         <td>
-                            {% for org in event.organizers.all %}
+                            {% for org in event_data.event.organizers.all %}
                                 {{ org.name }}{% if not forloop.last %}, {% endif %}
                             {% endfor %}
                         </td>
                         <td>
-                            <a href="{% url 'event_detail' event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.9em;">View</a>
+                            <a href="{% url 'event_detail' event_data.event.id %}" class="btn" style="padding: 4px 8px; font-size: 0.9em;">View</a>
+                            {% if event_data.status == 'cancelled-future' %}
+                                <span style="font-size: 0.8em; color: #dc3545; font-weight: bold;">CANCELLED</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
@@ -223,6 +228,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+            <!-- Add the legend -->
+            {% include "home/components/event_status_legend.html" %}
 
             <!-- Pagination -->
             {% if page_obj.has_other_pages %}

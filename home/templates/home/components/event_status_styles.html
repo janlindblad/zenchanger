@@ -1,0 +1,62 @@
+<style>
+    /* Event status colors */
+    .event-row-future {
+        background-color: #e8f5e8 !important; /* Light green */
+    }
+
+    .event-row-cancelled-future {
+        background-color: #ffeaea !important; /* Light red */
+    }
+
+    .event-row-recent-past {
+        background-color: #fff9e6 !important; /* Light yellow */
+    }
+
+    .event-row-past {
+        /* Keep default background */
+    }
+
+    .event-table tr:hover.event-row-future {
+        background-color: #d4edd4 !important;
+    }
+
+    .event-table tr:hover.event-row-cancelled-future {
+        background-color: #ffd6d6 !important;
+    }
+
+    .event-table tr:hover.event-row-recent-past {
+        background-color: #fff0b3 !important;
+    }
+
+    /* Event status legend */
+    .event-status-legend {
+        margin-top: 15px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+
+    .event-status-legend small {
+        color: #666;
+    }
+
+    .status-example {
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin: 0 5px;
+        display: inline-block;
+    }
+
+    .status-example.future {
+        background: #e8f5e8;
+    }
+
+    .status-example.cancelled {
+        background: #ffeaea;
+    }
+
+    .status-example.recent {
+        background: #fff9e6;
+    }
+</style>
